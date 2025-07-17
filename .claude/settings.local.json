@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir api)",
+      "Bash(firebase functions:config:get:*)",
+      "Bash(node:*)",
+      "Bash(chmod:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(powershell:*)",
+      "Bash(rm:*)",
+      "Bash(cmd /c \"firebase deploy --only functions\")",
+      "Bash(firebase:*)"
+    ],
+    "deny": []
+  }
+}

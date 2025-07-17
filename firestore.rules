@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Règles spécifiques pour les collections d'emails - PRIORITÉ
+    match /passwordResetRequests/{document} {
+      allow create: if true; // Permettre la création même sans authentification
+      allow read, update, delete: if request.auth != null;
+    }
+    
+    match /emailVerificationRequests/{document} {
+      allow create: if true; // Permettre la création même sans authentification pour la revérification
+      allow read, update, delete: if request.auth != null;
+    }
+    
+    match /passwordChanges/{document} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
+    }
+    
+    // Règles pour les utilisateurs
+    match /users/{userId} {
+      allow read, write: if request.auth != null;
+      allow create: if request.auth != null;
+    }
+    
+    // Règle par défaut pour les autres documents
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

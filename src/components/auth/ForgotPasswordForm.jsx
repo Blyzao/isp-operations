@@ -1,0 +1,125 @@
+import React from "react";
+import { Mail, Send, ArrowLeft, KeyRound } from "lucide-react";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
+
+function ForgotPasswordForm({
+  email,
+  setEmail,
+  isLoading,
+  setIsLoading,
+  setError,
+  setShowForgotPassword,
+}) {
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Format d'email invalide");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const db = getFirestore();
+      await addDoc(collection(db, "passwordResetRequests"), {
+        email,
+        timestamp: new Date(),
+      });
+      alert(
+        "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation dans quelques minutes."
+      );
+      setShowForgotPassword(false);
+    } catch (err) {
+      console.error("Erreur lors de la demande de réinitialisation:", err);
+      let errorMessage = "Erreur lors de l'envoi de la demande.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+            <KeyRound className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">
+              Mot de passe oublié
+            </h2>
+            <p className="text-blue-100 text-sm">
+              Réinitialisez votre mot de passe
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-8">
+        <div className="mb-6">
+          <p className="text-gray-600 text-sm leading-relaxed">
+            Saisissez votre adresse email et nous vous enverrons un lien pour
+            réinitialiser votre mot de passe.
+          </p>
+        </div>
+
+        <form className="space-y-6" onSubmit={handleForgotPassword}>
+          <div className="space-y-2">
+            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+              <Mail className="w-4 h-4" />
+              <span>Adresse email</span>
+            </label>
+            <input
+              type="email"
+              placeholder="exemple@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl ${
+              isLoading
+                ? "bg-gradient-to-r from-blue-400 to-blue-500 cursor-not-allowed"
+                : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform hover:-translate-y-0.5"
+            } text-white`}
+          >
+            {isLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Envoi en cours...</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-5 h-5" />
+                <span>Envoyer l'email de réinitialisation</span>
+              </>
+            )}
+          </button>
+
+          <div className="pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(false)}
+              className="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium transition-colors duration-200 flex items-center justify-center space-x-1 w-full"
+              disabled={isLoading}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Retour à la connexion</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default ForgotPasswordForm;
