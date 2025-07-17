@@ -12,6 +12,7 @@ import {
   Mail,
   Search,
   Filter,
+  Briefcase,
 } from "lucide-react";
 import UserFormModal from "./UserFormModal";
 
@@ -21,6 +22,7 @@ function UsersTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterProfile, setFilterProfile] = useState("all");
+  const [filterEmailProfil, setFilterEmailProfil] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [editUserId, setEditUserId] = useState(null);
 
@@ -33,6 +35,8 @@ function UsersTable() {
         nom: doc.data().nom || "N/A",
         email: doc.data().email || "N/A",
         profil: doc.data().profil || "user",
+        emailProfil: doc.data().emailProfil || "niveau1",
+        fonction: doc.data().fonction || "N/A",
         active: doc.data().active !== false,
       }));
       setUsers(usersList);
@@ -66,14 +70,19 @@ function UsersTable() {
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.fonction.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === "all" ||
       (filterStatus === "active" && user.active) ||
       (filterStatus === "inactive" && !user.active);
     const matchesProfile =
       filterProfile === "all" || user.profil === filterProfile;
-    return matchesSearch && matchesStatus && matchesProfile;
+    const matchesEmailProfil =
+      filterEmailProfil === "all" || user.emailProfil === filterEmailProfil;
+    return (
+      matchesSearch && matchesStatus && matchesProfile && matchesEmailProfil
+    );
   });
 
   if (loading) {
@@ -119,7 +128,7 @@ function UsersTable() {
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Rechercher par nom ou email..."
+                placeholder="Rechercher par nom, email ou fonction..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
@@ -147,6 +156,16 @@ function UsersTable() {
                 <option value="admin">Administrateur</option>
                 <option value="superviseur">Superviseur</option>
                 <option value="user">Utilisateur</option>
+              </select>
+              <select
+                value={filterEmailProfil}
+                onChange={(e) => setFilterEmailProfil(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="all">Tous email profils</option>
+                <option value="niveau1">Niveau 1</option>
+                <option value="niveau2">Niveau 2</option>
+                <option value="niveau3">Niveau 3</option>
               </select>
             </div>
           </div>
@@ -176,6 +195,27 @@ function UsersTable() {
                 superviseurs
               </span>
             </div>
+            <div className="flex items-center space-x-1">
+              <Mail className="w-3 h-3 text-blue-500" />
+              <span className="text-xs text-gray-600">
+                {users.filter((u) => u.emailProfil === "niveau1").length} niveau
+                1
+              </span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Mail className="w-3 h-3 text-blue-400" />
+              <span className="text-xs text-gray-600">
+                {users.filter((u) => u.emailProfil === "niveau2").length} niveau
+                2
+              </span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Mail className="w-3 h-3 text-blue-300" />
+              <span className="text-xs text-gray-600">
+                {users.filter((u) => u.emailProfil === "niveau3").length} niveau
+                3
+              </span>
+            </div>
           </div>
         </div>
 
@@ -184,18 +224,25 @@ function UsersTable() {
             <div className="text-center py-12">
               <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <h3 className="text-lg font-medium text-gray-900">
-                {searchTerm || filterStatus !== "all" || filterProfile !== "all"
+                {searchTerm ||
+                filterStatus !== "all" ||
+                filterProfile !== "all" ||
+                filterEmailProfil !== "all"
                   ? "Aucun utilisateur trouvé"
                   : "Aucun utilisateur"}
               </h3>
               <p className="text-gray-600 text-sm">
-                {searchTerm || filterStatus !== "all" || filterProfile !== "all"
+                {searchTerm ||
+                filterStatus !== "all" ||
+                filterProfile !== "all" ||
+                filterEmailProfil !== "all"
                   ? "Modifiez vos critères de recherche"
                   : "Créez votre premier utilisateur"}
               </p>
               {!searchTerm &&
                 filterStatus === "all" &&
-                filterProfile === "all" && (
+                filterProfile === "all" &&
+                filterEmailProfil === "all" && (
                   <button
                     onClick={handleNewUser}
                     className="mt-4 flex items-center space-x-1 mx-auto bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-200 text-sm"
@@ -224,6 +271,15 @@ function UsersTable() {
                     </th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
                       Profil
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
+                      Email Profil
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
+                      <div className="flex items-center space-x-1">
+                        <Briefcase className="w-4 h-4" />
+                        <span>Fonction</span>
+                      </div>
                     </th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
                       Statut
@@ -287,6 +343,30 @@ function UsersTable() {
                               : "Utilisateur"}
                           </span>
                         </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium
+                            ${
+                              user.emailProfil === "niveau1"
+                                ? "bg-blue-100 text-blue-800"
+                                : user.emailProfil === "niveau2"
+                                ? "bg-blue-200 text-blue-900"
+                                : "bg-blue-300 text-blue-900"
+                            }`}
+                        >
+                          <Mail className="w-3 h-3" />
+                          <span>
+                            {user.emailProfil === "niveau1"
+                              ? "Niveau 1"
+                              : user.emailProfil === "niveau2"
+                              ? "Niveau 2"
+                              : "Niveau 3"}
+                          </span>
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {user.fonction}
                       </td>
                       <td className="py-3 px-4">
                         <span

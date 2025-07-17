@@ -6,24 +6,31 @@ import { doc, getDoc } from "firebase/firestore";
 import Auth from "./components/Auth.jsx";
 import Navbar from "./components/Navbar.jsx";
 import UsersTable from "./components/UsersTable.jsx";
+import ZonesTable from "./components/ZonesTable.jsx";
+import LieuxTable from "./components/LieuxTable.jsx";
 
-const ProtectedRoute = ({ children, user, requiredRole }) => {
+const ProtectedRoute = ({ children, user, requiredRoles }) => {
   const navigate = useNavigate();
   useEffect(() => {
     if (!user) {
       navigate("/auth");
       return;
     }
-    if (requiredRole) {
+    if (requiredRoles) {
       const checkRole = async () => {
         const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (!userDoc.exists() || userDoc.data().profil !== requiredRole) {
+        if (
+          !userDoc.exists() ||
+          (Array.isArray(requiredRoles)
+            ? !requiredRoles.includes(userDoc.data().profil)
+            : userDoc.data().profil !== requiredRoles)
+        ) {
           navigate("/");
         }
       };
       checkRole();
     }
-  }, [user, requiredRole, navigate]);
+  }, [user, requiredRoles, navigate]);
   return user ? children : null;
 };
 
@@ -40,7 +47,7 @@ function App() {
   const Layout = ({ children }) => (
     <div className="min-h-screen bg-gray-50">
       <Navbar user={user} />
-      <div className="container mx-auto px-4 py-6">{children}</div>
+      <div className="container mx-auto px-4 pt-20 pb-6">{children}</div>
     </div>
   );
 
@@ -57,7 +64,8 @@ function App() {
                   Bienvenue sur Nexion
                 </h1>
                 <p className="text-gray-600">
-                  Plateforme sécurisée de gestion des données des opérations de sûreté
+                  Plateforme sécurisée de gestion des données des opérations de
+                  sûreté
                 </p>
               </div>
             </Layout>
@@ -67,9 +75,29 @@ function App() {
       <Route
         path="/users"
         element={
-          <ProtectedRoute user={user} requiredRole="admin">
+          <ProtectedRoute user={user} requiredRoles="admin">
             <Layout>
               <UsersTable />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/parametres/zones"
+        element={
+          <ProtectedRoute user={user} requiredRoles={["admin", "superviseur"]}>
+            <Layout>
+              <ZonesTable />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/parametres/lieux"
+        element={
+          <ProtectedRoute user={user} requiredRoles={["admin", "superviseur"]}>
+            <Layout>
+              <LieuxTable />
             </Layout>
           </ProtectedRoute>
         }

@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db, auth } from "../firebase";
-import {
-  createUserWithEmailAndPassword,
-  updateProfile,
-} from "firebase/auth";
+import { db } from "../firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import {
   User,
@@ -16,6 +12,9 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  Briefcase,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 
 function UserFormModal({ isOpen, onClose, userId, isEditMode }) {
@@ -23,7 +22,10 @@ function UserFormModal({ isOpen, onClose, userId, isEditMode }) {
     nom: "",
     email: "",
     profil: "user",
+    emailProfil: "niveau1",
+    fonction: "",
     password: "",
+    active: true,
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -40,7 +42,10 @@ function UserFormModal({ isOpen, onClose, userId, isEditMode }) {
               nom: data.nom || "",
               email: data.email || "",
               profil: data.profil || "user",
+              emailProfil: data.emailProfil || "niveau1",
+              fonction: data.fonction || "",
               password: "",
+              active: data.active !== undefined ? data.active : true,
             });
           } else {
             setError("Utilisateur non trouvé.");
@@ -73,26 +78,41 @@ function UserFormModal({ isOpen, onClose, userId, isEditMode }) {
             nom: formData.nom,
             email: formData.email,
             profil: formData.profil,
+            emailProfil: formData.emailProfil,
+            fonction: formData.fonction,
+            active: formData.active,
           },
           { merge: true }
         );
       } else {
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          formData.email,
-          formData.password
+        const response = await fetch(
+          "https://us-central1-isp-operations.cloudfunctions.net/createUserByAdmin",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+              displayName: formData.nom,
+              profil: formData.profil,
+              emailProfil: formData.emailProfil,
+              fonction: formData.fonction,
+              active: formData.active,
+            }),
+          }
         );
-        const user = userCredential.user;
-        await updateProfile(user, { displayName: formData.nom });
-        await setDoc(doc(db, "users", user.uid), {
-          nom: formData.nom,
-          email: formData.email,
-          profil: formData.profil,
-          active: true,
-        });
 
-        // L'email d'activation sera envoyé automatiquement par la Cloud Function
-        // sendActivationEmail qui se déclenche lors de la création d'un utilisateur
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.error || "Erreur lors de la création de l'utilisateur"
+          );
+        }
+
+        console.log("✅ Utilisateur créé avec succès:", result);
       }
       onClose();
     } catch (err) {
@@ -133,8 +153,8 @@ function UserFormModal({ isOpen, onClose, userId, isEditMode }) {
       className="fixed inset-0 z-[101] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-xl w-full max-w-md shadow-xl border border-gray-100 animate-scale-in mx-4">
-        <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-6 py-4">
+      <div className="bg-white rounded-xl w-full max-w-lg shadow-xl border border-gray-100 animate-scale-in mx-4">
+        <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-6 py-4 rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
@@ -166,139 +186,210 @@ function UserFormModal({ isOpen, onClose, userId, isEditMode }) {
 
         <div className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
-                <User className="w-3 h-3" />
-                <span>Nom complet</span>
-              </label>
-              <input
-                type="text"
-                name="nom"
-                value={formData.nom}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
-                placeholder="Saisir le nom complet"
-                required
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
-                <Mail className="w-3 h-3" />
-                <span>Adresse email</span>
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                placeholder="exemple@email.com"
-                required
-                disabled={isEditMode}
-              />
-              {isEditMode && (
-                <p className="text-xs text-gray-500 flex items-center space-x-1">
-                  <Lock className="w-3 h-3" />
-                  <span>Email non modifiable</span>
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
-                <Shield className="w-3 h-3" />
-                <span>Niveau d'accès</span>
-              </label>
-              <select
-                name="profil"
-                value={formData.profil}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
-                required
-              >
-                <option value="user">👤 Utilisateur</option>
-                <option value="superviseur">👷 Superviseur</option>
-                <option value="admin">🛡️ Administrateur</option>
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
-                <Lock className="w-3 h-3" />
-                <span>Mot de passe</span>
-                {!isEditMode && <span className="text-red-500">*</span>}
-              </label>
-              <div className="relative">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
+                  <User className="w-3 h-3" />
+                  <span>Nom complet</span>
+                </label>
                 <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
+                  type="text"
+                  name="nom"
+                  value={formData.nom}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  placeholder={
-                    isEditMode ? "Non modifiable" : "Minimum 6 caractères"
-                  }
-                  required={!isEditMode}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
+                  placeholder="Saisir le nom complet"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
+                  <Shield className="w-3 h-3" />
+                  <span>Niveau d'accès</span>
+                </label>
+                <select
+                  name="profil"
+                  value={formData.profil}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
+                  required
+                >
+                  <option value="user">👤 Utilisateur</option>
+                  <option value="superviseur">👷 Superviseur</option>
+                  <option value="admin">🛡️ Administrateur</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
+                  <Mail className="w-3 h-3" />
+                  <span>Adresse email</span>
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  placeholder="exemple@email.com"
+                  required
                   disabled={isEditMode}
                 />
-                {!isEditMode && (
+                {isEditMode && (
+                  <p className="text-xs text-gray-500 flex items-center space-x-1">
+                    <Lock className="w-3 h-3" />
+                    <span>Email non modifiable</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
+                  <Mail className="w-3 h-3" />
+                  <span>Profil email</span>
+                </label>
+                <select
+                  name="emailProfil"
+                  value={formData.emailProfil}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
+                  required
+                >
+                  <option value="niveau1">📧 Niveau 1</option>
+                  <option value="niveau2">📧 Niveau 2</option>
+                  <option value="niveau3">📧 Niveau 3</option>
+                </select>
+              </div>
+
+              <div className="space-y-1 col-span-2">
+                <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
+                  <Briefcase className="w-3 h-3" />
+                  <span>Fonction</span>
+                </label>
+                <input
+                  type="text"
+                  name="fonction"
+                  value={formData.fonction}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
+                  placeholder="Saisir la fonction"
+                />
+              </div>
+
+              <div className="space-y-1 col-span-2">
+                <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
+                  <Lock className="w-3 h-3" />
+                  <span>Mot de passe</span>
+                  {!isEditMode && <span className="text-red-500">*</span>}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    placeholder={
+                      isEditMode ? "Non modifiable" : "Minimum 6 caractères"
+                    }
+                    required={!isEditMode}
+                    disabled={isEditMode}
+                  />
+                  {!isEditMode && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  )}
+                </div>
+                {isEditMode && (
+                  <p className="text-xs text-gray-500 flex items-center space-x-1">
+                    <Lock className="w-3 h-3" />
+                    <span>Mot de passe non modifiable ici</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1 col-span-2">
+                <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
+                  {formData.active ? (
+                    <ToggleRight className="w-3 h-3 text-green-600" />
+                  ) : (
+                    <ToggleLeft className="w-3 h-3 text-gray-400" />
+                  )}
+                  <span>Statut du compte</span>
+                </label>
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    onClick={() => setFormData(prev => ({ ...prev, active: !prev.active }))}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                      formData.active ? 'bg-green-600' : 'bg-gray-400'
+                    }`}
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                        formData.active ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
                   </button>
-                )}
+                  <div className="flex-1">
+                    <span className={`text-sm font-medium ${formData.active ? 'text-green-700' : 'text-gray-700'}`}>
+                      {formData.active ? 'Compte actif' : 'Compte désactivé'}
+                    </span>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formData.active 
+                        ? 'L\'utilisateur peut se connecter à l\'application' 
+                        : 'L\'utilisateur ne peut pas se connecter à l\'application'}
+                    </p>
+                  </div>
+                </div>
               </div>
-              {isEditMode && (
-                <p className="text-xs text-gray-500 flex items-center space-x-1">
-                  <Lock className="w-3 h-3" />
-                  <span>Mot de passe non modifiable ici</span>
-                </p>
+
+              {error && (
+                <div className="col-span-2 bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-red-600 text-xs font-medium">{error}</p>
+                </div>
               )}
-            </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-600 text-xs font-medium">{error}</p>
+              <div className="col-span-2 flex items-center justify-end space-x-2 pt-3 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 text-sm"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white rounded-lg disabled:from-blue-500 disabled:to-blue-400 transition-all duration-200 text-sm"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Enregistrement...</span>
+                    </>
+                  ) : (
+                    <>
+                      {isEditMode ? (
+                        <Edit3 className="w-4 h-4" />
+                      ) : (
+                        <UserPlus className="w-4 h-4" />
+                      )}
+                      <span>Enregistrer</span>
+                    </>
+                  )}
+                </button>
               </div>
-            )}
-
-            <div className="flex items-center justify-end space-x-2 pt-3 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 text-sm"
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white rounded-lg disabled:from-blue-500 disabled:to-blue-400 transition-all duration-200 text-sm"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Enregistrement...</span>
-                  </>
-                ) : (
-                  <>
-                    {isEditMode ? (
-                      <Edit3 className="w-4 h-4" />
-                    ) : (
-                      <UserPlus className="w-4 h-4" />
-                    )}
-                    <span>Enregistrer</span>
-                  </>
-                )}
-              </button>
             </div>
           </form>
         </div>

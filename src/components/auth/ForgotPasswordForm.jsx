@@ -1,6 +1,5 @@
 import React from "react";
 import { Mail, Send, ArrowLeft, KeyRound } from "lucide-react";
-import { getFirestore, collection, addDoc } from "firebase/firestore";
 
 function ForgotPasswordForm({
   email,
@@ -23,18 +22,37 @@ function ForgotPasswordForm({
     }
 
     try {
-      const db = getFirestore();
-      await addDoc(collection(db, "passwordResetRequests"), {
-        email,
-        timestamp: new Date(),
+      console.log("🔵 Envoi de demande de réinitialisation pour:", email);
+      
+      const response = await fetch('https://us-central1-isp-operations.cloudfunctions.net/sendPasswordResetEmail', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
       });
-      alert(
-        "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation dans quelques minutes."
-      );
-      setShowForgotPassword(false);
+      
+      const result = await response.json();
+      console.log("✅ Résultat:", result);
+      
+      if (response.ok) {
+        alert(
+          "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation dans quelques minutes."
+        );
+        setShowForgotPassword(false);
+      } else {
+        throw new Error(result.error || "Erreur lors de l'envoi");
+      }
     } catch (err) {
-      console.error("Erreur lors de la demande de réinitialisation:", err);
+      console.error("❌ Erreur lors de la demande de réinitialisation:", err);
       let errorMessage = "Erreur lors de l'envoi de la demande.";
+      
+      if (err.message.includes("USER_NOT_FOUND")) {
+        errorMessage = "Utilisateur non trouvé avec cet email.";
+      } else if (err.message.includes("INVALID_EMAIL")) {
+        errorMessage = "Format d'email invalide.";
+      }
+      
       setError(errorMessage);
     } finally {
       setIsLoading(false);

@@ -27,16 +27,14 @@ import {
   Box,
   Calendar,
   BarChart,
+  Database,
+  TrendingUp,
+  Activity,
+  Cog,
 } from "lucide-react";
 import ChangePasswordModal from "./ChangePasswordModal";
 
 function Navbar({ user }) {
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [operationsDropdownOpen, setOperationsDropdownOpen] = useState(false);
-  const [statsDropdownOpen, setStatsDropdownOpen] = useState(false);
-  const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
-  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
-    useState(false);
   const [userRole, setUserRole] = useState("user");
   const navigate = useNavigate();
 
@@ -68,30 +66,10 @@ function Navbar({ user }) {
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest(".relative.group")) {
-        setUserDropdownOpen(false);
-        setOperationsDropdownOpen(false);
-        setStatsDropdownOpen(false);
-        setSettingsDropdownOpen(false);
-      }
-    };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
-
-  const toggleDropdown = (setter, state) => (e) => {
-    e.stopPropagation();
-    setUserDropdownOpen(false);
-    setOperationsDropdownOpen(false);
-    setStatsDropdownOpen(false);
-    setSettingsDropdownOpen(false);
-    setter(!state);
-  };
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
+    useState(false);
 
   const handleOpenChangePasswordModal = () => {
-    setUserDropdownOpen(false);
     setIsChangePasswordModalOpen(true);
   };
 
@@ -101,425 +79,400 @@ function Navbar({ user }) {
 
   if (!user) {
     return (
-      <nav className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-blue-900 to-blue-700 shadow-md border-b border-blue-500/30 h-16">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <nav className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 shadow-lg border-b border-blue-500/30 h-16 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-3 flex justify-between items-center h-full">
           <Link
             to="/"
-            className="flex items-center space-x-2 group transition-all duration-300 hover:scale-105"
+            className="flex items-center space-x-3 group transition-all duration-300 hover:scale-105"
           >
-            <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-gradient-to-br from-white/20 to-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-lg">
+              <Building2 className="w-6 h-6 text-white" />
             </div>
-            <span className="text-white text-xl font-extrabold tracking-tight group-hover:text-blue-200">
+            <span className="text-white text-2xl font-black tracking-tight group-hover:text-blue-100 transition-colors duration-300">
               Nexion
             </span>
           </Link>
-          <div className="w-8 h-8 bg-white/20 rounded-full"></div>
+          <div className="w-10 h-10 bg-white/10 rounded-full border border-white/20"></div>
         </div>
       </nav>
     );
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-blue-900 to-blue-700 shadow-md border-b border-blue-500/30 h-16">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link
-          to="/"
-          className="flex items-center space-x-2 group transition-all duration-300 hover:scale-105"
-        >
-          <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center backdrop-blur-sm group-hover:bg-white/30 transition-all duration-300">
-            <Building2 className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-white text-xl font-extrabold tracking-tight group-hover:text-blue-200">
-            Nexion
-          </span>
-        </Link>
-
-        <div className="flex items-center space-x-6">
-          <div className="relative group hidden md:block">
-            <button
-              onClick={toggleDropdown(
-                setOperationsDropdownOpen,
-                operationsDropdownOpen
-              )}
-              className="text-white/90 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300 font-medium text-sm flex items-center"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Données Opérations
-              <ChevronDown
-                className={`w-4 h-4 ml-2 text-white/70 transition-transform duration-300 ${
-                  operationsDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-            {operationsDropdownOpen && (
-              <div className="absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-md rounded-xl shadow-xl z-[110] border border-gray-200/50 animate-in fade-in slide-in-from-top-2 duration-200 max-w-7xl mx-auto">
-                <div className="grid grid-cols-3 gap-4 p-6">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      Sécurité
-                    </h3>
-                    <Link
-                      to="/operations/incidents"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <AlertCircle className="w-4 h-4 mr-2 text-red-500" />
-                      Incidents
-                    </Link>
-                    <Link
-                      to="/operations/individus-interpelles"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <UserX className="w-4 h-4 mr-2 text-orange-500" />
-                      Individus interpellés
-                    </Link>
-                    <Link
-                      to="/operations/titres-acces-saisis"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <Lock className="w-4 h-4 mr-2 text-purple-500" />
-                      Titres d'accès saisis
-                    </Link>
-                    <Link
-                      to="/operations/cargaisons-saisies"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <Truck className="w-4 h-4 mr-2 text-blue-500" />
-                      Cargaisons saisies
-                    </Link>
-                    <Link
-                      to="/operations/alertes"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <Siren className="w-4 h-4 mr-2 text-red-600" />
-                      Alertes
-                    </Link>
-                    <Link
-                      to="/operations/controle-acces"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <CheckSquare className="w-4 h-4 mr-2 text-green-500" />
-                      Contrôle d'accès
-                    </Link>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      Ressources
-                    </h3>
-                    <Link
-                      to="/operations/effectifs"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <UsersIcon className="w-4 h-4 mr-2 text-blue-600" />
-                      Effectifs
-                    </Link>
-                    <Link
-                      to="/operations/kilometrages"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <Car className="w-4 h-4 mr-2 text-gray-500" />
-                      Kilométrages
-                    </Link>
-                    <Link
-                      to="/operations/produits-exportation"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <Package className="w-4 h-4 mr-2 text-green-600" />
-                      Produits à l'exportation
-                    </Link>
-                    <Link
-                      to="/operations/materiels"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <Box className="w-4 h-4 mr-2 text-purple-600" />
-                      Matériels
-                    </Link>
-                    <Link
-                      to="/operations/provision-bord"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <Ship className="w-4 h-4 mr-2 text-blue-500" />
-                      Provision de bord
-                    </Link>
-                    <Link
-                      to="/operations/evenements"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setOperationsDropdownOpen(false)}
-                    >
-                      <Calendar className="w-4 h-4 mr-2 text-orange-500" />
-                      Événements
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="relative group hidden md:block">
-            <button
-              onClick={toggleDropdown(setStatsDropdownOpen, statsDropdownOpen)}
-              className="text-white/90 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300 font-medium text-sm flex items-center"
-            >
-              <BarChart className="w-4 h-4 mr-2" />
-              Statistiques
-              <ChevronDown
-                className={`w-4 h-4 ml-2 text-white/70 transition-transform duration-300 ${
-                  statsDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-            {statsDropdownOpen && (
-              <div className="absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-md rounded-xl shadow-xl z-[110] border border-gray-200/50 animate-in fade-in slide-in-from-top-2 duration-200 max-w-7xl mx-auto">
-                <div className="grid grid-cols-3 gap-4 p-6">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                      Statistiques
-                    </h3>
-                    <Link
-                      to="/statistiques/incidents"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setStatsDropdownOpen(false)}
-                    >
-                      <AlertCircle className="w-4 h-4 mr-2 text-red-500" />
-                      Incidents
-                    </Link>
-                    <Link
-                      to="/statistiques/individus-interpelles"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setStatsDropdownOpen(false)}
-                    >
-                      <UserX className="w-4 h-4 mr-2 text-orange-500" />
-                      Individus interpellés
-                    </Link>
-                    <Link
-                      to="/statistiques/alertes"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setStatsDropdownOpen(false)}
-                    >
-                      <Siren className="w-4 h-4 mr-2 text-red-600" />
-                      Alertes
-                    </Link>
-                    <Link
-                      to="/statistiques/titres-acces-saisis"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setStatsDropdownOpen(false)}
-                    >
-                      <Lock className="w-4 h-4 mr-2 text-purple-500" />
-                      Titres d'accès saisis
-                    </Link>
-                    <Link
-                      to="/statistiques/effectifs"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setStatsDropdownOpen(false)}
-                    >
-                      <UsersIcon className="w-4 h-4 mr-2 text-blue-600" />
-                      Effectifs
-                    </Link>
-                    <Link
-                      to="/statistiques/kilometrage"
-                      className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                      onClick={() => setStatsDropdownOpen(false)}
-                    >
-                      <Car className="w-4 h-4 mr-2 text-gray-500" />
-                      Kilométrage
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {userRole === "admin" && (
-            <div className="relative group hidden md:block">
-              <button
-                onClick={toggleDropdown(
-                  setSettingsDropdownOpen,
-                  settingsDropdownOpen
-                )}
-                className="text-white/90 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300 font-medium text-sm flex items-center"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Paramètres
-                <ChevronDown
-                  className={`w-4 h-4 ml-2 text-white/70 transition-transform duration-300 ${
-                    settingsDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-              {settingsDropdownOpen && (
-                <div className="absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-md rounded-xl shadow-xl z-[110] border border-gray-200/50 animate-in fade-in slide-in-from-top-2 duration-200 max-w-7xl mx-auto">
-                  <div className="grid grid-cols-4 gap-4 p-6">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                        Lieux
-                      </h3>
-                      <Link
-                        to="/parametres/zones"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <MapPin className="w-4 h-4 mr-2 text-blue-500" />
-                        Zones
-                      </Link>
-                      <Link
-                        to="/parametres/lieux"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <MapPin className="w-4 h-4 mr-2 text-blue-600" />
-                        Lieux
-                      </Link>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                        Ressources Humaines
-                      </h3>
-                      <Link
-                        to="/parametres/personnels"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <UsersIcon className="w-4 h-4 mr-2 text-green-500" />
-                        Personnels
-                      </Link>
-                      <Link
-                        to="/parametres/patrouilleurs"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <Shield className="w-4 h-4 mr-2 text-blue-500" />
-                        Patrouilleurs
-                      </Link>
-                      <Link
-                        to="/parametres/equipe"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <UsersIcon className="w-4 h-4 mr-2 text-purple-500" />
-                        Équipe
-                      </Link>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                        Matériel & Véhicules
-                      </h3>
-                      <Link
-                        to="/parametres/cameras"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <Camera className="w-4 h-4 mr-2 text-gray-500" />
-                        Caméras
-                      </Link>
-                      <Link
-                        to="/parametres/vehicule"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <Car className="w-4 h-4 mr-2 text-blue-600" />
-                        Véhicule
-                      </Link>
-                      <Link
-                        to="/parametres/type-embarcations"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <Ship className="w-4 h-4 mr-2 text-blue-500" />
-                        Type d'embarcations
-                      </Link>
-                      <Link
-                        to="/parametres/type-materiel"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <Box className="w-4 h-4 mr-2 text-purple-600" />
-                        Type de matériel
-                      </Link>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                        Données
-                      </h3>
-                      <Link
-                        to="/parametres/resultats-alerte"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <Flag className="w-4 h-4 mr-2 text-red-500" />
-                        Résultats alerte
-                      </Link>
-                      <Link
-                        to="/parametres/type-document"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <FileText className="w-4 h-4 mr-2 text-blue-500" />
-                        Type de document
-                      </Link>
-                      <Link
-                        to="/parametres/motifs-saisie"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <Lock className="w-4 h-4 mr-2 text-purple-500" />
-                        Motifs de saisie
-                      </Link>
-                      <Link
-                        to="/parametres/usagers"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <UsersIcon className="w-4 h-4 mr-2 text-green-500" />
-                        Usagers
-                      </Link>
-                      <Link
-                        to="/parametres/type-cargaison"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <Truck className="w-4 h-4 mr-2 text-blue-600" />
-                        Type de cargaison
-                      </Link>
-                      <Link
-                        to="/parametres/type-produits-exportation"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <Package className="w-4 h-4 mr-2 text-green-600" />
-                        Type produits exportation
-                      </Link>
-                      <Link
-                        to="/parametres/type-provision-bord"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                        onClick={() => setSettingsDropdownOpen(false)}
-                      >
-                        <Ship className="w-4 h-4 mr-2 text-blue-500" />
-                        Type provision de bord
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 shadow-lg border-b border-blue-500/30 h-16 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-3 flex items-center justify-between h-full">
+          {/* Logo */}
+          <Link
+            to="/"
+            className="flex items-center space-x-3 group transition-all duration-300 hover:scale-105"
+          >
+            <div className="w-10 h-10 bg-gradient-to-br from-white/20 to-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 shadow-lg group-hover:shadow-xl group-hover:bg-white/25 transition-all duration-300">
+              <Building2 className="w-6 h-6 text-white" />
             </div>
-          )}
+            <span className="text-white text-2xl font-black tracking-tight group-hover:text-blue-100 transition-colors duration-300">
+              Nexion
+            </span>
+          </Link>
 
+          {/* Menu principal centré */}
+          <div className="flex items-center justify-center space-x-2 hidden md:flex absolute left-1/2 transform -translate-x-1/2">
+            {/* Données Opérations */}
+            <div className="relative group">
+              <button className="text-white/90 hover:text-white hover:bg-white/15 px-4 py-2.5 rounded-xl transition-all duration-300 font-medium text-sm flex items-center backdrop-blur-sm border border-transparent hover:border-white/20 shadow-sm hover:shadow-md h-10">
+                <Database className="w-4 h-4 mr-2" />
+                Données
+                <ChevronDown className="w-4 h-4 ml-2 text-white/70 transition-transform duration-300 group-hover:rotate-180" />
+              </button>
+              <div className="absolute left-1/2 transform -translate-x-1/2 mt-1 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-[110] border border-blue-200/60 animate-in fade-in slide-in-from-top-5 duration-300 w-[900px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto hidden group-hover:block before:content-[''] before:absolute before:w-full before:h-3 before:-top-3 before:bg-transparent">
+                <div className="p-1">
+                  <div className="grid grid-cols-2 gap-6 p-6">
+                    <div className="space-y-1">
+                      <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                        <Shield className="w-4 h-4 mr-2 text-blue-600" />
+                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                          Sécurité
+                        </h3>
+                      </div>
+                      <Link
+                        to="/operations/incidents"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <AlertCircle className="w-4 h-4 mr-3 text-red-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Incidents</span>
+                      </Link>
+                      <Link
+                        to="/operations/individus-interpelles"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <UserX className="w-4 h-4 mr-3 text-orange-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">
+                          Individus interpellés
+                        </span>
+                      </Link>
+                      <Link
+                        to="/operations/titres-acces-saisis"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <Lock className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">
+                          Titres d'accès saisis
+                        </span>
+                      </Link>
+                      <Link
+                        to="/operations/cargaisons-saisies"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <Truck className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Cargaisons saisies</span>
+                      </Link>
+                      <Link
+                        to="/operations/alertes"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <Siren className="w-4 h-4 mr-3 text-red-600 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Alertes</span>
+                      </Link>
+                      <Link
+                        to="/operations/controle-acces"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <CheckSquare className="w-4 h-4 mr-3 text-green-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Contrôle d'accès</span>
+                      </Link>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                        <Activity className="w-4 h-4 mr-2 text-green-600" />
+                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                          Ressources
+                        </h3>
+                      </div>
+                      <Link
+                        to="/operations/effectifs"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <UsersIcon className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Effectifs</span>
+                      </Link>
+                      <Link
+                        to="/operations/kilometrages"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <Car className="w-4 h-4 mr-3 text-gray-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Kilométrages</span>
+                      </Link>
+                      <Link
+                        to="/operations/produits-exportation"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <Package className="w-4 h-4 mr-3 text-green-600 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">
+                          Produits à l'exportation
+                        </span>
+                      </Link>
+                      <Link
+                        to="/operations/materiels"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <Box className="w-4 h-4 mr-3 text-purple-600 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Matériels</span>
+                      </Link>
+                      <Link
+                        to="/operations/provision-bord"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <Ship className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Provision de bord</span>
+                      </Link>
+                      <Link
+                        to="/operations/evenements"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <Calendar className="w-4 h-4 mr-3 text-orange-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Événements</span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Statistiques */}
+            <div className="relative group">
+              <button className="text-white/90 hover:text-white hover:bg-white/15 px-4 py-2.5 rounded-xl transition-all duration-300 font-medium text-sm flex items-center backdrop-blur-sm border border-transparent hover:border-white/20 shadow-sm hover:shadow-md h-10">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Statistiques
+                <ChevronDown className="w-4 h-4 ml-2 text-white/70 transition-transform duration-300 group-hover:rotate-180" />
+              </button>
+              <div className="absolute left-1/2 transform -translate-x-1/2 mt-1 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-[110] border border-blue-200/60 animate-in fade-in slide-in-from-top-5 duration-300 w-[500px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto hidden group-hover:block before:content-[''] before:absolute before:w-full before:h-3 before:-top-3 before:bg-transparent">
+                <div className="p-1">
+                  <div className="p-6">
+                    <div className="flex items-center mb-4 pb-3 border-b border-gray-100">
+                      <BarChart className="w-5 h-5 mr-3 text-blue-600" />
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Tableaux de bord
+                      </h3>
+                    </div>
+                    <div className="space-y-1">
+                      <Link
+                        to="/statistiques/incidents"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <AlertCircle className="w-4 h-4 mr-3 text-red-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Incidents</span>
+                      </Link>
+                      <Link
+                        to="/statistiques/individus-interpelles"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <UserX className="w-4 h-4 mr-3 text-orange-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">
+                          Individus interpellés
+                        </span>
+                      </Link>
+                      <Link
+                        to="/statistiques/alertes"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <Siren className="w-4 h-4 mr-3 text-red-600 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Alertes</span>
+                      </Link>
+                      <Link
+                        to="/statistiques/titres-acces-saisis"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <Lock className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">
+                          Titres d'accès saisis
+                        </span>
+                      </Link>
+                      <Link
+                        to="/statistiques/effectifs"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <UsersIcon className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Effectifs</span>
+                      </Link>
+                      <Link
+                        to="/statistiques/kilometrage"
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                      >
+                        <Car className="w-4 h-4 mr-3 text-gray-500 group-hover:scale-110 transition-transform duration-200" />
+                        <span className="font-medium">Kilométrage</span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Paramètres (admin seulement) */}
+            {userRole === "admin" && (
+              <div className="relative group">
+                <button className="text-white/90 hover:text-white hover:bg-white/15 px-4 py-2.5 rounded-xl transition-all duration-300 font-medium text-sm flex items-center backdrop-blur-sm border border-transparent hover:border-white/20 shadow-sm hover:shadow-md h-10">
+                  <Cog className="w-4 h-4 mr-2" />
+                  Paramètres
+                  <ChevronDown className="w-4 h-4 ml-2 text-white/70 transition-transform duration-300 group-hover:rotate-180" />
+                </button>
+                <div className="absolute left-1/2 transform -translate-x-1/2 mt-1 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-[110] border border-blue-200/60 animate-in fade-in slide-in-from-top-5 duration-300 w-[1200px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto hidden group-hover:block before:content-[''] before:absolute before:w-full before:h-3 before:-top-3 before:bg-transparent">
+                  <div className="p-1">
+                    <div className="grid grid-cols-4 gap-6 p-6">
+                      <div className="space-y-1">
+                        <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                          <MapPin className="w-4 h-4 mr-2 text-green-600" />
+                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                            Lieux
+                          </h3>
+                        </div>
+                        <Link
+                          to="/parametres/zones"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <MapPin className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Zones</span>
+                        </Link>
+                        <Link
+                          to="/parametres/lieux"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <MapPin className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Lieux</span>
+                        </Link>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                          <UsersIcon className="w-4 h-4 mr-2 text-purple-600" />
+                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                            RH
+                          </h3>
+                        </div>
+                        <Link
+                          to="/parametres/personnels"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <UsersIcon className="w-4 h-4 mr-3 text-green-500 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Personnels</span>
+                        </Link>
+                        <Link
+                          to="/parametres/patrouilleurs"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <Shield className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Patrouilleurs</span>
+                        </Link>
+                        <Link
+                          to="/parametres/equipe"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <UsersIcon className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Équipe</span>
+                        </Link>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                          <Car className="w-4 h-4 mr-2 text-blue-600" />
+                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                            Matériels
+                          </h3>
+                        </div>
+                        <Link
+                          to="/parametres/cameras"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <Camera className="w-4 h-4 mr-3 text-gray-500 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Caméras</span>
+                        </Link>
+                        <Link
+                          to="/parametres/vehicule"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <Car className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Véhicules</span>
+                        </Link>
+                        <Link
+                          to="/parametres/type-embarcations"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <Ship className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Embarcations</span>
+                        </Link>
+                        <Link
+                          to="/parametres/type-materiel"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <Box className="w-4 h-4 mr-3 text-purple-600 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Type matériel</span>
+                        </Link>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                          <FileText className="w-4 h-4 mr-2 text-orange-600" />
+                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                            Données
+                          </h3>
+                        </div>
+                        <Link
+                          to="/parametres/resultats-alerte"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <Flag className="w-4 h-4 mr-3 text-red-500 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Résultats alerte</span>
+                        </Link>
+                        <Link
+                          to="/parametres/type-document"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <FileText className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Type document</span>
+                        </Link>
+                        <Link
+                          to="/parametres/motifs-saisie"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <Lock className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Motifs saisie</span>
+                        </Link>
+                        <Link
+                          to="/parametres/incidents"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <Lock className="w-4 h-4 mr-3 text-green-500 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Type d'incident</span>
+                        </Link>
+                        <Link
+                          to="/parametres/type-cargaison"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <Truck className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Type cargaison</span>
+                        </Link>
+                        <Link
+                          to="/parametres/type-produits-exportation"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <Package className="w-4 h-4 mr-3 text-green-600 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Produits export</span>
+                        </Link>
+                        <Link
+                          to="/parametres/type-provision-bord"
+                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                        >
+                          <Ship className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Provision bord</span>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Menu utilisateur */}
           <div className="relative group">
-            <button
-              onClick={toggleDropdown(setUserDropdownOpen, userDropdownOpen)}
-              className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-2 rounded-lg transition-all duration-300"
-            >
-              <span className="text-white font-medium hidden sm:block max-w-28 truncate text-sm">
+            <button className="flex items-center space-x-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm px-4 py-2.5 rounded-xl transition-all duration-300 border border-white/20 hover:border-white/30 shadow-sm hover:shadow-md h-10">
+              <span className="text-white font-medium hidden sm:block max-w-32 truncate text-sm">
                 {user?.email || "Utilisateur"}
               </span>
               <div className="relative">
@@ -527,7 +480,7 @@ function Navbar({ user }) {
                   <img
                     src={user.photoURL}
                     alt="User"
-                    className="w-8 h-8 rounded-full border-2 border-white/30 group-hover:border-white/50 transition-all duration-300"
+                    className="w-8 h-8 rounded-full border-2 border-white/30 group-hover:border-white/50 transition-all duration-300 shadow-sm"
                     onError={(e) => {
                       e.target.src = defaultAvatar;
                     }}
@@ -536,66 +489,63 @@ function Navbar({ user }) {
                   <img
                     src={defaultAvatar}
                     alt="User"
-                    className="w-8 h-8 rounded-full border-2 border-white/30 group-hover:border-white/50 transition-all duration-300"
+                    className="w-8 h-8 rounded-full border-2 border-white/30 group-hover:border-white/50 transition-all duration-300 shadow-sm"
                   />
                 )}
-                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 border-2 border-white rounded-full"></div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full shadow-sm"></div>
               </div>
-              <ChevronDown
-                className={`w-4 h-4 text-white/70 transition-transform duration-300 ${
-                  userDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
+              <ChevronDown className="w-4 h-4 text-white/70 transition-transform duration-300 group-hover:rotate-180" />
             </button>
-
-            {userDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-md rounded-xl shadow-xl z-[110] border border-gray-200/50 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="px-4 py-3 border-b border-gray-200/50">
-                  <p className="text-xs text-gray-500">Connecté en tant que</p>
-                  <p className="text-sm font-medium text-gray-900 truncate">
+            <div className="absolute right-0 mt-1 w-72 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-[110] border border-blue-200/60 animate-in fade-in slide-in-from-top-5 duration-300 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto hidden group-hover:block before:content-[''] before:absolute before:w-full before:h-3 before:-top-3 before:bg-transparent">
+              <div className="p-1">
+                <div className="px-5 py-4 border-b border-gray-100">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                    Connecté en tant que
+                  </p>
+                  <p className="text-sm font-bold text-gray-900 truncate mt-1 flex items-center">
+                    <span className="w-2 h-2 bg-green-400 rounded-full mr-2 inline-block"></span>
                     {user?.email || "Utilisateur"}
                   </p>
                 </div>
-
-                {userRole === "admin" && (
-                  <Link
-                    to="/users"
-                    className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                    onClick={() => setUserDropdownOpen(false)}
+                <div className="py-2">
+                  {userRole === "admin" && (
+                    <Link
+                      to="/users"
+                      className="flex items-center px-5 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm group rounded-xl mx-2 backdrop-blur-sm"
+                    >
+                      <Users className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                      <span className="font-medium">
+                        Liste des utilisateurs
+                      </span>
+                    </Link>
+                  )}
+                  <button
+                    onClick={handleOpenChangePasswordModal}
+                    className="flex items-center w-full px-5 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm group rounded-xl mx-2 backdrop-blur-sm"
                   >
-                    <Users className="w-4 h-4 mr-2 text-blue-500" />
-                    Liste des utilisateurs
-                  </Link>
-                )}
-
-                <button
-                  onClick={handleOpenChangePasswordModal}
-                  className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 text-sm"
-                >
-                  <Settings className="w-4 h-4 mr-2 text-gray-500" />
-                  Mise à jour du compte
-                </button>
-
-                <div className="border-t border-gray-200/50">
+                    <Settings className="w-4 h-4 mr-3 text-gray-500 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="font-medium">Mise à jour du compte</span>
+                  </button>
+                </div>
+                <div className="border-t border-gray-100 py-2">
                   <button
                     onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200 text-sm"
+                    className="flex items-center w-full px-5 py-3 text-red-600 hover:bg-gradient-to-r hover:from-red-50/80 hover:to-red-100/80 hover:text-red-700 transition-all duration-200 text-sm group rounded-xl mx-2 backdrop-blur-sm"
                   >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Déconnexion
+                    <LogOut className="w-4 h-4 mr-3 group-hover:scale-110 transition-transform duration-200" />
+                    <span className="font-medium">Déconnexion</span>
                   </button>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
-      </div>
-
+      </nav>
       <ChangePasswordModal
         isOpen={isChangePasswordModalOpen}
         onClose={handleCloseChangePasswordModal}
       />
-    </nav>
+    </>
   );
 }
 

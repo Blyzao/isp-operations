@@ -175,36 +175,69 @@ function Auth() {
     setIsLoading(true);
 
     try {
-      // Utiliser l'email stocké dans le state au lieu de auth.currentUser
-      if (email) {
-        const db = getFirestore();
-        const docRef = await addDoc(collection(db, "emailVerificationRequests"), {
-          email: email,
-          timestamp: new Date(),
-        });
-        console.log("Document ajouté avec ID:", docRef.id);
-        alert(
-          "Email de vérification renvoyé. Vérifiez votre boîte de réception."
-        );
-      } else {
-        setError("Aucun email trouvé. Veuillez vous reconnecter.");
+      console.log("🔵 Tentative d'envoi d'email pour:", email);
+      
+      if (!email) {
+        setError("Aucun email trouvé. Veuillez saisir votre email.");
+        return;
       }
+
+      if (!password) {
+        setError("Mot de passe requis pour renvoyer l'email.");
+        return;
+      }
+
+      // Se connecter temporairement pour obtenir le contexte d'authentification
+      console.log("🔑 Connexion temporaire...");
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("✅ Connexion réussie pour:", userCredential.user.email);
+      
+      // Attendre un peu pour que le token soit propagé
+      console.log("⏳ Attente de la propagation du token...");
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Vérifier que l'utilisateur est bien connecté
+      const currentUser = auth.currentUser;
+      console.log("👤 Utilisateur actuel:", currentUser ? currentUser.email : "Non connecté");
+      
+      if (!currentUser) {
+        throw new Error("Utilisateur non connecté après authentification");
+      }
+      
+      // Appeler la fonction HTTP d'activation
+      console.log("📧 Appel de la fonction HTTP d'activation...");
+      
+      const response = await fetch('https://us-central1-isp-operations.cloudfunctions.net/sendActivationEmailHttp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
+      });
+      
+      const result = await response.json();
+      console.log("✅ Résultat fonction HTTP:", result);
+      
+      if (!response.ok) {
+        throw new Error(result.error || "Erreur lors de l'envoi");
+      }
+      
+      alert("Email de vérification renvoyé. Vérifiez votre boîte de réception.");
+      
     } catch (err) {
-      console.error("Erreur lors de l'ajout du document:", err);
+      console.error("❌ Erreur complète:", err);
       let errorMessage = "Erreur lors de l'envoi de l'email de vérification.";
-      switch (err.code) {
-        case "auth/too-many-requests":
-          errorMessage = "Trop de tentatives. Réessayez plus tard.";
-          break;
-        case "auth/user-token-expired":
-          errorMessage = "Session expirée. Veuillez vous reconnecter.";
-          break;
-        case "permission-denied":
-          errorMessage = "Permissions insuffisantes. Veuillez vous reconnecter.";
-          break;
-        default:
-          errorMessage = err.message || "Erreur réseau. Réessayez plus tard.";
+      
+      if (err.code === "auth/invalid-credential") {
+        errorMessage = "Identifiants invalides. Veuillez vérifier votre mot de passe.";
+      } else if (err.code === "auth/too-many-requests") {
+        errorMessage = "Trop de tentatives. Réessayez plus tard.";
+      } else if (err.code === "unauthenticated") {
+        errorMessage = "Vous devez être connecté pour renvoyer l'email.";
+      } else if (err.message) {
+        errorMessage = err.message;
       }
+      
       setError(errorMessage);
     } finally {
       setIsLoading(false);

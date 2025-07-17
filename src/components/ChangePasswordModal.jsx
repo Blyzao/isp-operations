@@ -7,7 +7,6 @@ import {
   verifyPasswordResetCode,
   confirmPasswordReset,
 } from "firebase/auth";
-import { getFirestore, collection, addDoc } from "firebase/firestore";
 import { Lock, X, Loader2, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -16,14 +15,13 @@ function ChangePasswordModal({
   onClose,
   isResetMode = false,
   oobCode = "",
-  setError,
 }) {
   const [formData, setFormData] = useState({
     oldPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-  const [error, setLocalError] = useState(null);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -33,33 +31,65 @@ function ChangePasswordModal({
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setError(null);
+  };
+
+  // Validation pour activer le bouton
+  const isFormValid = () => {
+    if (isResetMode) {
+      return formData.newPassword && 
+             formData.confirmPassword && 
+             formData.newPassword === formData.confirmPassword &&
+             formData.newPassword.length >= 6;
+    } else {
+      return formData.oldPassword && 
+             formData.newPassword && 
+             formData.confirmPassword && 
+             formData.newPassword === formData.confirmPassword &&
+             formData.newPassword.length >= 6;
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLocalError(null);
     setError(null);
     setLoading(true);
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setLocalError("Les mots de passe ne correspondent pas.");
       setError("Les mots de passe ne correspondent pas.");
       setLoading(false);
       return;
     }
 
     try {
-      const db = getFirestore();
       if (isResetMode) {
         if (!oobCode) {
           throw new Error("Code de réinitialisation manquant.");
         }
         const email = await verifyPasswordResetCode(auth, oobCode);
         await confirmPasswordReset(auth, oobCode, formData.newPassword);
-        await addDoc(collection(db, "passwordChanges"), {
-          email: email,
-          timestamp: new Date(),
-        });
+        
+        // Envoyer l'email de confirmation via la fonction HTTP
+        try {
+          const response = await fetch('https://us-central1-isp-operations.cloudfunctions.net/sendPasswordChangeConfirmation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              email: email
+            })
+          });
+          
+          if (response.ok) {
+            console.log("Email de confirmation envoyé avec succès");
+          } else {
+            console.error("Erreur lors de l'envoi de l'email de confirmation");
+          }
+        } catch (emailError) {
+          console.error("Erreur lors de l'envoi de l'email de confirmation:", emailError);
+        }
+        
         alert(
           "Mot de passe réinitialisé avec succès. Veuillez vous connecter."
         );
@@ -76,10 +106,29 @@ function ChangePasswordModal({
         );
         await reauthenticateWithCredential(user, credential);
         await updatePassword(user, formData.newPassword);
-        await addDoc(collection(db, "passwordChanges"), {
-          email: user.email,
-          timestamp: new Date(),
-        });
+        
+        // Envoyer l'email de confirmation via la fonction HTTP
+        try {
+          const response = await fetch('https://us-central1-isp-operations.cloudfunctions.net/sendPasswordChangeConfirmation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              email: user.email,
+              userId: user.uid 
+            })
+          });
+          
+          if (response.ok) {
+            console.log("Email de confirmation envoyé avec succès");
+          } else {
+            console.error("Erreur lors de l'envoi de l'email de confirmation");
+          }
+        } catch (emailError) {
+          console.error("Erreur lors de l'envoi de l'email de confirmation:", emailError);
+        }
+        
         alert("Mot de passe changé avec succès. Veuillez vous reconnecter.");
         onClose();
         navigate("/auth");
@@ -111,7 +160,6 @@ function ChangePasswordModal({
             errorMessage = err.message || errorMessage;
         }
       }
-      setLocalError(errorMessage);
       setError(errorMessage);
       setLoading(false);
     }
@@ -130,20 +178,20 @@ function ChangePasswordModal({
       className="fixed inset-0 z-101 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-gray-100 animate-scale-in mx-4 overflow-hidden">
-        <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-6">
+      <div className="bg-white rounded-xl w-full max-w-md shadow-xl border border-gray-100 animate-scale-in mx-4">
+        <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-6 py-4 rounded-t-xl">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                <Lock className="w-6 h-6 text-white" />
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                <Lock className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-lg font-bold text-white">
                   {isResetMode
                     ? "Réinitialiser le mot de passe"
                     : "Changer le mot de passe"}
                 </h2>
-                <p className="text-blue-100 text-sm">
+                <p className="text-blue-200 text-xs">
                   {isResetMode
                     ? "Définir un nouveau mot de passe"
                     : "Mettre à jour votre mot de passe"}
@@ -152,19 +200,19 @@ function ChangePasswordModal({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-xl transition-colors duration-200 group"
+              className="p-1.5 hover:bg-white/20 rounded-lg transition-colors duration-200"
             >
-              <X className="w-5 h-5 text-white group-hover:scale-110 transition-transform duration-200" />
+              <X className="w-4 h-4 text-white" />
             </button>
           </div>
         </div>
 
         <div className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isResetMode && (
-              <div className="space-y-2">
-                <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
-                  <Lock className="w-4 h-4" />
+              <div className="space-y-1">
+                <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
+                  <Lock className="w-3 h-3" />
                   <span>Ancien mot de passe</span>
                   <span className="text-red-500">*</span>
                 </label>
@@ -174,28 +222,28 @@ function ChangePasswordModal({
                     name="oldPassword"
                     value={formData.oldPassword}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                     placeholder="Saisir l'ancien mot de passe"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowOldPassword(!showOldPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showOldPassword ? (
-                      <EyeOff className="w-5 h-5" />
+                      <EyeOff className="w-4 h-4" />
                     ) : (
-                      <Eye className="w-5 h-5" />
+                      <Eye className="w-4 h-4" />
                     )}
                   </button>
                 </div>
               </div>
             )}
 
-            <div className="space-y-2">
-              <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
-                <Lock className="w-4 h-4" />
+            <div className="space-y-1">
+              <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
+                <Lock className="w-3 h-3" />
                 <span>Nouveau mot de passe</span>
                 <span className="text-red-500">*</span>
               </label>
@@ -205,27 +253,27 @@ function ChangePasswordModal({
                   name="newPassword"
                   value={formData.newPassword}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                   placeholder="Minimum 6 caractères"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showNewPassword ? (
-                    <EyeOff className="w-5 h-5" />
+                    <EyeOff className="w-4 h-4" />
                   ) : (
-                    <Eye className="w-5 h-5" />
+                    <Eye className="w-4 h-4" />
                   )}
                 </button>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
-                <Lock className="w-4 h-4" />
+            <div className="space-y-1">
+              <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
+                <Lock className="w-3 h-3" />
                 <span>Confirmer le mot de passe</span>
                 <span className="text-red-500">*</span>
               </label>
@@ -235,42 +283,42 @@ function ChangePasswordModal({
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                   placeholder="Confirmer le nouveau mot de passe"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="w-5 h-5" />
+                    <EyeOff className="w-4 h-4" />
                   ) : (
-                    <Eye className="w-5 h-5" />
+                    <Eye className="w-4 h-4" />
                   )}
                 </button>
               </div>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <p className="text-red-600 text-sm font-medium">{error}</p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-red-600 text-xs font-medium">{error}</p>
               </div>
             )}
 
-            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-end space-x-2 pt-3 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2.5 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors duration-200 font-medium"
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 text-sm cursor-pointer"
               >
                 Annuler
               </button>
               <button
                 type="submit"
-                disabled={loading}
-                className="flex items-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl disabled:from-blue-400 disabled:to-blue-500 transition-all duration-200 font-medium shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
+                disabled={loading || !isFormValid()}
+                className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white rounded-lg disabled:from-blue-500 disabled:to-blue-400 transition-all duration-200 text-sm cursor-pointer disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
