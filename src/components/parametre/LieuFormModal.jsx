@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import {
   doc,
   setDoc,
@@ -19,7 +19,7 @@ import {
   ToggleLeft,
   ToggleRight,
 } from "lucide-react";
-import { GoogleMap, LoadScript, Marker, StreetViewPanorama } from "@react-google-maps/api";
+import { GoogleMap, Marker } from "@react-google-maps/api";
 
 function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
   const [formData, setFormData] = useState({
@@ -35,8 +35,7 @@ function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState("map"); // "map" ou "satellite"
-  const [streetViewError, setStreetViewError] = useState(false);
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
 
   const mapStyles = { height: "400px", width: "100%" };
   const defaultCenter = { lat: 5.304097935599856, lng: -4.023534599916851 }; // Côte d'Ivoire
@@ -63,7 +62,10 @@ function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
             setFormData({
               nomLieu: data.nomLieu || "",
               zone: data.zone || "",
-              localisation: data.localisation || { lat: 5.304097935599856, lng: -4.023534599916851 },
+              localisation: data.localisation || {
+                lat: 5.304097935599856,
+                lng: -4.023534599916851,
+              },
               typeLieu: data.typeLieu || "Autre",
               active: data.active !== false,
               export: data.export || false,
@@ -80,6 +82,50 @@ function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
       fetchLieu();
     }
   }, [isEditMode, lieuId]);
+
+  useEffect(() => {
+    const loadGoogleMaps = async () => {
+      if (window.google && window.google.maps) {
+        setIsGoogleLoaded(true);
+        return;
+      }
+
+      if (window.googleMapsLoading) {
+        // Si le script est déjà en cours de chargement, attendre
+        const checkLoaded = setInterval(() => {
+          if (window.google && window.google.maps) {
+            setIsGoogleLoaded(true);
+            clearInterval(checkLoaded);
+          }
+        }, 100);
+        return;
+      }
+
+      // Marquer que le script est en cours de chargement
+      window.googleMapsLoading = true;
+
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${
+        import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+      }&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        setIsGoogleLoaded(true);
+        window.googleMapsLoading = false;
+      };
+      script.onerror = () => {
+        console.error("Erreur lors du chargement de Google Maps");
+        setError("Erreur lors du chargement de Google Maps");
+        window.googleMapsLoading = false;
+      };
+      document.head.appendChild(script);
+    };
+
+    if (isOpen) {
+      loadGoogleMaps();
+    }
+  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -117,7 +163,7 @@ function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
         await setDoc(
           lieuRef,
           {
-            nomLieu: formData.nomLieu,
+            nomLieu: formData.nomLieu.toUpperCase(),
             zone: formData.zone,
             localisation: formData.localisation,
             typeLieu: formData.typeLieu,
@@ -129,7 +175,7 @@ function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
         );
       } else {
         await addDoc(collection(db, "lieux"), {
-          nomLieu: formData.nomLieu,
+          nomLieu: formData.nomLieu.toUpperCase(),
           zone: formData.zone,
           localisation: formData.localisation,
           typeLieu: formData.typeLieu,
@@ -154,9 +200,8 @@ function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
   };
 
   const handleClose = () => {
-    setStreetViewError(false);
     setViewMode("map");
-    setIsMapLoaded(false);
+    setIsGoogleLoaded(false);
     onClose();
   };
 
@@ -301,29 +346,43 @@ function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Latitude</label>
+                    <label className="block text-xs text-gray-600 mb-1">
+                      Latitude
+                    </label>
                     <input
                       type="number"
                       step="any"
                       value={formData.localisation.lat}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        localisation: { ...prev.localisation, lat: parseFloat(e.target.value) || 0 }
-                      }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          localisation: {
+                            ...prev.localisation,
+                            lat: parseFloat(e.target.value) || 0,
+                          },
+                        }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                       placeholder="5.304097935599856"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Longitude</label>
+                    <label className="block text-xs text-gray-600 mb-1">
+                      Longitude
+                    </label>
                     <input
                       type="number"
                       step="any"
                       value={formData.localisation.lng}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        localisation: { ...prev.localisation, lng: parseFloat(e.target.value) || 0 }
-                      }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          localisation: {
+                            ...prev.localisation,
+                            lng: parseFloat(e.target.value) || 0,
+                          },
+                        }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                       placeholder="-4.023534599916851"
                     />
@@ -360,7 +419,9 @@ function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
                             formData.export ? "text-green-700" : "text-gray-700"
                           }`}
                         >
-                          {formData.export ? "Export activé" : "Export désactivé"}
+                          {formData.export
+                            ? "Export activé"
+                            : "Export désactivé"}
                         </span>
                         <p className="text-xs text-gray-500 mt-1">
                           {formData.export
@@ -385,7 +446,9 @@ function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
                         type="button"
                         onClick={() => handleToggle("avitaillement")}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                          formData.avitaillement ? "bg-green-600" : "bg-gray-400"
+                          formData.avitaillement
+                            ? "bg-green-600"
+                            : "bg-gray-400"
                         }`}
                       >
                         <span
@@ -488,58 +551,63 @@ function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="border border-gray-300 rounded-lg overflow-hidden">
-                  <LoadScript
-                    googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-                    onLoad={() => setIsMapLoaded(true)}
-                    onError={() => setStreetViewError(true)}
-                  >
-                    {isMapLoaded ? (
-                      <GoogleMap
-                        mapContainerStyle={mapStyles}
-                        zoom={viewMode === "satellite" ? 15 : 10}
-                        center={formData.localisation}
-                        onClick={handleMapClick}
-                        mapTypeId={viewMode === "satellite" ? "satellite" : "roadmap"}
-                        options={{
-                          streetViewControl: false,
-                          fullscreenControl: false,
-                          mapTypeControl: true,
-                          zoomControl: true,
-                          rotateControl: false,
-                          scaleControl: false,
+                  {isGoogleLoaded ? (
+                    <GoogleMap
+                      mapContainerStyle={mapStyles}
+                      zoom={viewMode === "satellite" ? 15 : 10}
+                      center={formData.localisation}
+                      onClick={handleMapClick}
+                      mapTypeId={
+                        viewMode === "satellite" ? "satellite" : "roadmap"
+                      }
+                      options={{
+                        streetViewControl: false,
+                        fullscreenControl: false,
+                        mapTypeControl: true,
+                        zoomControl: true,
+                        rotateControl: false,
+                        scaleControl: false,
+                      }}
+                    >
+                      <Marker
+                        position={formData.localisation}
+                        draggable={true}
+                        onDragEnd={(e) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            localisation: {
+                              lat: e.latLng.lat(),
+                              lng: e.latLng.lng(),
+                            },
+                          }));
                         }}
-                      >
-                        <Marker 
-                          position={formData.localisation}
-                          draggable={true}
-                          onDragEnd={(e) => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              localisation: { lat: e.latLng.lat(), lng: e.latLng.lng() },
-                            }));
-                          }}
-                        />
-                      </GoogleMap>
-                    ) : (
-                      <div className="flex items-center justify-center h-full bg-gray-100">
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                          <p className="text-sm text-gray-600">Chargement de la carte...</p>
-                        </div>
+                      />
+                    </GoogleMap>
+                  ) : (
+                    <div
+                      className="flex items-center justify-center h-full bg-gray-100"
+                      style={mapStyles}
+                    >
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-600">
+                          Chargement de la carte...
+                        </p>
                       </div>
-                    )}
-                  </LoadScript>
+                    </div>
+                  )}
                 </div>
-                
+
                 <p className="text-xs text-gray-500">
-                  {viewMode === "map" 
-                    ? "Cliquez sur la carte ou déplacez le marqueur pour définir la localisation" 
+                  {viewMode === "map"
+                    ? "Cliquez sur la carte ou déplacez le marqueur pour définir la localisation"
                     : "Vue satellite - Cliquez sur la carte ou déplacez le marqueur pour une localisation précise"}
                 </p>
                 <p className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                  Latitude: {formData.localisation.lat.toFixed(6)}<br />
+                  Latitude: {formData.localisation.lat.toFixed(6)}
+                  <br />
                   Longitude: {formData.localisation.lng.toFixed(6)}
                 </p>
               </div>

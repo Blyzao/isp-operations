@@ -697,6 +697,32 @@ exports.sendPasswordChangeConfirmation = functions.https.onRequest(async (req, r
 // =====================================================
 // CRÉATION D'UTILISATEUR PAR ADMIN (VERSION HTTP)
 // =====================================================
+// Fonction pour générer un mot de passe sécurisé de 16 caractères
+const generateSecurePassword = () => {
+  const length = 16;
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
+  let password = "";
+  
+  // Assurer au moins un caractère de chaque type
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+  const symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+  
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += symbols[Math.floor(Math.random() * symbols.length)];
+  
+  // Compléter avec des caractères aléatoires
+  for (let i = 4; i < length; i++) {
+    password += charset[Math.floor(Math.random() * charset.length)];
+  }
+  
+  // Mélanger le mot de passe
+  return password.split('').sort(() => Math.random() - 0.5).join('');
+};
+
 exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
   // Headers CORS
   res.set("Access-Control-Allow-Origin", "*");
@@ -709,7 +735,7 @@ exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
   }
 
   console.log("🔵 createUserByAdmin HTTP appelée");
-  const { email, password, displayName, profil, emailProfil, fonction, active } = req.body;
+  const { email, displayName, profil, emailProfil, fonction, active, firstConnect } = req.body;
   
   console.log("📧 Email:", email);
   console.log("👤 DisplayName:", displayName);
@@ -718,9 +744,9 @@ exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
   console.log("💼 Fonction:", fonction);
   console.log("✅ Active:", active);
 
-  if (!email || !password || !displayName || !profil) {
+  if (!email || !displayName || !profil) {
     return res.status(400).json({
-      error: "Données manquantes (email, password, displayName, profil requis)",
+      error: "Données manquantes (email, displayName, profil requis)",
       code: "MISSING_DATA",
     });
   }
@@ -732,18 +758,15 @@ exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
     });
   }
 
-  if (password.length < 6) {
-    return res.status(400).json({
-      error: "Le mot de passe doit contenir au moins 6 caractères",
-      code: "WEAK_PASSWORD",
-    });
-  }
+  // Générer un mot de passe sécurisé automatiquement
+  const generatedPassword = generateSecurePassword();
+  console.log("🔑 Mot de passe généré pour:", email);
 
   try {
     // Créer l'utilisateur avec l'Admin SDK (ne connecte pas l'utilisateur)
     const userRecord = await admin.auth().createUser({
       email: email,
-      password: password,
+      password: generatedPassword,
       displayName: displayName,
       emailVerified: false,
     });
@@ -758,6 +781,7 @@ exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
       emailProfil: emailProfil || "niveau1",
       fonction: fonction || "",
       active: active !== undefined ? active : true,
+      firstConnect: true, // L'utilisateur devra changer son mot de passe à la première connexion
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -785,6 +809,12 @@ exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
         <h2>Activez votre compte pour commencer</h2>
         <p>Merci de rejoindre notre plateforme sécurisée de gestion des données des opérations de sûreté. Pour accéder à toutes les fonctionnalités, vous devez confirmer votre adresse email.</p>
         
+        <div class="info-box">
+          <h3 style="margin-bottom: 12px; color: #1e3a8a;">🔑 Vos informations de connexion :</h3>
+          <p style="margin: 8px 0;"><strong>Email :</strong> ${email}</p>
+          <p style="margin: 8px 0;"><strong>Mot de passe temporaire :</strong> <code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 14px;">${generatedPassword}</code></p>
+        </div>
+        
         <div class="cta-container">
           <a href="${link}" class="cta-button">✨ Activer mon compte</a>
         </div>
@@ -793,7 +823,8 @@ exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
           <h3 style="margin-bottom: 12px; color: #1e3a8a;">📋 Prochaines étapes :</h3>
           <ul style="margin: 0; padding-left: 20px;">
             <li>Confirmez votre email en cliquant sur le bouton ci-dessus</li>
-            <li>Complétez votre profil utilisateur</li>
+            <li>Connectez-vous avec vos informations de connexion</li>
+            <li>Changez votre mot de passe lors de votre première connexion</li>
             <li>Explorez les fonctionnalités de la plateforme</li>
           </ul>
         </div>
@@ -801,7 +832,8 @@ exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
         <div class="divider"></div>
         
         <div class="security-notice">
-          <p><strong>🔒 Sécurité :</strong> Si vous n'avez pas créé ce compte, ignorez cet email ou contactez notre support.</p>
+          <p><strong>🔒 Sécurité :</strong> Votre mot de passe temporaire est unique et sécurisé. Vous devrez le changer lors de votre première connexion.</p>
+          <p><strong>⚠️ Important :</strong> Si vous n'avez pas créé ce compte, ignorez cet email ou contactez notre support.</p>
         </div>
       `;
 
@@ -852,6 +884,295 @@ exports.createUserByAdmin = functions.https.onRequest(async (req, res) => {
     res.status(500).json({
       error: errorMessage,
       code: errorCode,
+      details: error.message,
+    });
+  }
+});
+
+// =====================================================
+// FONCTION POUR ACTIVER firstConnect APRÈS VÉRIFICATION EMAIL
+// =====================================================
+exports.activateFirstConnect = functions.https.onRequest(async (req, res) => {
+  // Headers CORS
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    res.status(200).send("");
+    return;
+  }
+
+  console.log("🔵 activateFirstConnect appelée");
+  const { uid } = req.body;
+  
+  console.log("👤 UID reçu:", uid);
+
+  if (!uid) {
+    return res.status(400).json({
+      error: "UID utilisateur manquant",
+      code: "MISSING_UID",
+    });
+  }
+
+  try {
+    // Vérifier que l'utilisateur existe
+    const userRecord = await admin.auth().getUser(uid);
+    console.log("✅ Utilisateur trouvé:", userRecord.email);
+
+    // Vérifier que l'email est vérifié
+    if (!userRecord.emailVerified) {
+      return res.status(400).json({
+        error: "Email non vérifié",
+        code: "EMAIL_NOT_VERIFIED",
+      });
+    }
+
+    // Mettre à jour firstConnect à true dans Firestore
+    const userRef = admin.firestore().collection("users").doc(uid);
+    await userRef.update({
+      firstConnect: true,
+      emailVerifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    console.log("✅ firstConnect activé pour l'utilisateur:", uid);
+
+    res.status(200).json({
+      success: true,
+      message: "firstConnect activé avec succès",
+    });
+  } catch (error) {
+    console.error("❌ Erreur lors de l'activation de firstConnect:", error);
+    
+    if (error.code === "auth/user-not-found") {
+      return res.status(404).json({
+        error: "Utilisateur non trouvé",
+        code: "USER_NOT_FOUND",
+      });
+    }
+
+    res.status(500).json({
+      error: "Erreur lors de l'activation de firstConnect",
+      code: "ACTIVATION_ERROR",
+      details: error.message,
+    });
+  }
+});
+
+// =====================================================
+// EMAIL DE NOTIFICATION D'INCIDENT
+// =====================================================
+exports.sendIncidentNotification = functions.https.onRequest(async (req, res) => {
+  // Headers CORS
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    res.status(200).send("");
+    return;
+  }
+
+  console.log("🔵 sendIncidentNotification appelée");
+  const incidentData = req.body;
+  
+  console.log("📋 Données d'incident reçues:", {
+    reference: incidentData.reference,
+    typeIncident: incidentData.typeIncident,
+    niveauImpact: incidentData.niveauImpact,
+    categorie: incidentData.categorie
+  });
+
+  if (!incidentData || !incidentData.reference) {
+    return res.status(400).json({
+      error: "Données d'incident manquantes",
+      code: "MISSING_DATA",
+    });
+  }
+
+  try {
+    // Récupérer tous les utilisateurs pour déterminer les destinataires
+    const usersSnapshot = await admin.firestore().collection("users").get();
+    const recipients = [];
+    
+    usersSnapshot.forEach(doc => {
+      const userData = doc.data();
+      const emailProfil = userData.emailProfil;
+      
+      if (!emailProfil || !userData.email) return;
+      
+      let shouldReceive = false;
+      
+      switch (emailProfil) {
+        case "niveau1":
+          // Reçoit tous les emails
+          shouldReceive = true;
+          break;
+        case "niveau2":
+          // Reçoit les emails quand catégorie = Sécurité
+          shouldReceive = incidentData.categorie === "Sécurité";
+          break;
+        case "niveau3":
+          // Reçoit les emails quand niveauImpact = "Catastrophique"
+          shouldReceive = incidentData.niveauImpact === "Catastrophique";
+          break;
+        default:
+          shouldReceive = false;
+      }
+      
+      if (shouldReceive) {
+        recipients.push({
+          email: userData.email,
+          nom: userData.nom || "Utilisateur",
+          profil: emailProfil
+        });
+      }
+    });
+
+    console.log(`📧 ${recipients.length} destinataires trouvés`);
+
+    if (recipients.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "Aucun destinataire trouvé pour ce type d'incident",
+        recipientCount: 0
+      });
+    }
+
+    // Construire le contenu de l'email
+    const subject = `${incidentData.typeIncident} ${incidentData.lieu}`;
+    
+    // Construire la liste des intervenants ISP
+    const intervenantsText = incidentData.personnels && incidentData.personnels.length > 0 
+      ? incidentData.personnels.map(p => `${p.nomPrenom} (${p.matricule})`).join('; ')
+      : "Aucun intervenant ISP";
+    
+    // Construire la liste des caméras
+    const camerasText = incidentData.cameras && incidentData.cameras.length > 0 
+      ? incidentData.cameras.map(c => c.idCamera).join('; ')
+      : "PAS DE CAMERA";
+
+    const content = `
+      <div class="info-box">
+        <h2 style="color: #dc2626; margin-bottom: 16px;">🚨 Nouvel Incident Signalé</h2>
+        <p><strong>Un nouvel incident a été signalé sur la plateforme Nexion.</strong></p>
+      </div>
+      
+      <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #1e3a8a; margin-bottom: 16px;">📋 Détails de l'incident</h3>
+        
+        <div style="margin-bottom: 12px;">
+          <strong>RÉFÉRENCE :</strong> ${incidentData.reference}
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+          <strong>DATE :</strong> ${incidentData.date}
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+          <strong>HEURE :</strong> ${incidentData.heure}
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+          <strong>ZONE :</strong> ${incidentData.zone}
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+          <strong>LIEU :</strong> ${incidentData.lieu}
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+          <strong>CATÉGORIE :</strong> ${incidentData.categorie}
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+          <strong>TYPE D'INCIDENT :</strong> ${incidentData.typeIncident}
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+          <strong>NIVEAU D'IMPACT :</strong> 
+          <span style="padding: 4px 8px; border-radius: 4px; font-weight: bold; ${
+            incidentData.niveauImpact === 'Catastrophique' ? 'background: #fee2e2; color: #dc2626;' :
+            incidentData.niveauImpact === 'Majeur' ? 'background: #fed7aa; color: #ea580c;' :
+            incidentData.niveauImpact === 'Modéré' ? 'background: #fef3c7; color: #d97706;' :
+            'background: #dcfce7; color: #16a34a;'
+          }">${incidentData.niveauImpact}</span>
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+          <strong>PRIMO INTERVENANT :</strong> ${incidentData.primo}
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+          <strong>INTERVENANTS ISP :</strong> ${intervenantsText}
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+          <strong>CAMÉRAS :</strong> ${camerasText}
+        </div>
+        
+        ${incidentData.quantite && incidentData.quantite !== "" ? `
+        <div style="margin-bottom: 12px;">
+          <strong>QUANTITÉ :</strong> ${incidentData.quantite}
+        </div>
+        ` : ''}
+      </div>
+      
+      ${incidentData.details ? `
+      <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #1e3a8a; margin-bottom: 12px;">📝 Détails de l'incident</h3>
+        <p style="white-space: pre-wrap; line-height: 1.6;">${incidentData.details}</p>
+      </div>
+      ` : ''}
+      
+      <div style="background: #e0f2fe; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0284c7;">
+        <p><strong>👤 Signalé par :</strong> ${incidentData.user?.nom || "Utilisateur"} - ${incidentData.user?.fonction || "Fonction non spécifiée"}</p>
+        <p><strong>📅 Date d'enregistrement :</strong> ${new Date(incidentData.dateEnreg).toLocaleDateString("fr-FR")} à ${new Date(incidentData.dateEnreg).toLocaleTimeString("fr-FR")}</p>
+      </div>
+      
+      <div class="cta-container">
+        <a href="${FRONTEND_URL}/operations/incidents" class="cta-button">📋 Voir tous les incidents</a>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="security-notice">
+        <p><strong>🔒 Confidentiel :</strong> Ce message contient des informations sensibles. Ne pas transférer sans autorisation.</p>
+      </div>
+    `;
+
+    // Envoyer l'email à tous les destinataires
+    const transporter = createTransporter();
+    const emailPromises = recipients.map(recipient => {
+      const mailOptions = {
+        from: `Nexion <${EMAIL_CONFIG.user}>`,
+        to: recipient.email,
+        subject: `[INCIDENT] ${subject}`,
+        html: getEmailTemplate(
+          content,
+          `Incident ${incidentData.niveauImpact}`,
+          "default"
+        ),
+      };
+      
+      return transporter.sendMail(mailOptions);
+    });
+
+    await Promise.all(emailPromises);
+    
+    console.log(`✅ Emails d'incident envoyés à ${recipients.length} destinataires`);
+
+    res.status(200).json({
+      success: true,
+      message: "Notifications d'incident envoyées avec succès",
+      recipientCount: recipients.length,
+      recipients: recipients.map(r => r.email)
+    });
+  } catch (error) {
+    console.error("❌ Erreur lors de l'envoi des notifications d'incident:", error);
+    res.status(500).json({
+      error: "Erreur lors de l'envoi des notifications d'incident",
+      code: "SEND_ERROR",
       details: error.message,
     });
   }

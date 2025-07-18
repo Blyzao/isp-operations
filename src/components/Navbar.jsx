@@ -36,6 +36,7 @@ import ChangePasswordModal from "./ChangePasswordModal";
 
 function Navbar({ user }) {
   const [userRole, setUserRole] = useState("user");
+  const [isRoleLoaded, setIsRoleLoaded] = useState(false);
   const navigate = useNavigate();
 
   const defaultAvatar =
@@ -51,7 +52,11 @@ function Navbar({ user }) {
           }
         } catch (error) {
           console.error("Erreur lors de la vérification du rôle:", error);
+        } finally {
+          setIsRoleLoaded(true);
         }
+      } else {
+        setIsRoleLoaded(true);
       }
     };
     checkUserRole();
@@ -117,355 +122,383 @@ function Navbar({ user }) {
 
           {/* Menu principal centré */}
           <div className="flex items-center justify-center space-x-2 hidden md:flex absolute left-1/2 transform -translate-x-1/2">
-            {/* Données Opérations */}
-            <div className="relative group">
-              <button className="text-white/90 hover:text-white hover:bg-white/15 px-4 py-2.5 rounded-xl transition-all duration-300 font-medium text-sm flex items-center backdrop-blur-sm border border-transparent hover:border-white/20 shadow-sm hover:shadow-md h-10">
-                <Database className="w-4 h-4 mr-2" />
-                Données
-                <ChevronDown className="w-4 h-4 ml-2 text-white/70 transition-transform duration-300 group-hover:rotate-180" />
-              </button>
-              <div className="absolute left-1/2 transform -translate-x-1/2 mt-1 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-[110] border border-blue-200/60 animate-in fade-in slide-in-from-top-5 duration-300 w-[900px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto hidden group-hover:block before:content-[''] before:absolute before:w-full before:h-3 before:-top-3 before:bg-transparent">
-                <div className="p-1">
-                  <div className="grid grid-cols-2 gap-6 p-6">
-                    <div className="space-y-1">
-                      <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
-                        <Shield className="w-4 h-4 mr-2 text-blue-600" />
-                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                          Sécurité
-                        </h3>
-                      </div>
-                      <Link
-                        to="/operations/incidents"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <AlertCircle className="w-4 h-4 mr-3 text-red-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Incidents</span>
-                      </Link>
-                      <Link
-                        to="/operations/individus-interpelles"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <UserX className="w-4 h-4 mr-3 text-orange-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">
-                          Individus interpellés
-                        </span>
-                      </Link>
-                      <Link
-                        to="/operations/titres-acces-saisis"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <Lock className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">
-                          Titres d'accès saisis
-                        </span>
-                      </Link>
-                      <Link
-                        to="/operations/cargaisons-saisies"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <Truck className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Cargaisons saisies</span>
-                      </Link>
-                      <Link
-                        to="/operations/alertes"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <Siren className="w-4 h-4 mr-3 text-red-600 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Alertes</span>
-                      </Link>
-                      <Link
-                        to="/operations/controle-acces"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <CheckSquare className="w-4 h-4 mr-3 text-green-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Contrôle d'accès</span>
-                      </Link>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
-                        <Activity className="w-4 h-4 mr-2 text-green-600" />
-                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                          Ressources
-                        </h3>
-                      </div>
-                      <Link
-                        to="/operations/effectifs"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <UsersIcon className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Effectifs</span>
-                      </Link>
-                      <Link
-                        to="/operations/kilometrages"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <Car className="w-4 h-4 mr-3 text-gray-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Kilométrages</span>
-                      </Link>
-                      <Link
-                        to="/operations/produits-exportation"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <Package className="w-4 h-4 mr-3 text-green-600 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">
-                          Produits à l'exportation
-                        </span>
-                      </Link>
-                      <Link
-                        to="/operations/materiels"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <Box className="w-4 h-4 mr-3 text-purple-600 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Matériels</span>
-                      </Link>
-                      <Link
-                        to="/operations/provision-bord"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <Ship className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Provision de bord</span>
-                      </Link>
-                      <Link
-                        to="/operations/evenements"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <Calendar className="w-4 h-4 mr-3 text-orange-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Événements</span>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+            {!isRoleLoaded && (
+              <div className="flex items-center space-x-2">
+                <div className="animate-pulse bg-white/20 h-10 w-20 rounded-xl"></div>
+                <div className="animate-pulse bg-white/20 h-10 w-24 rounded-xl"></div>
+                <div className="animate-pulse bg-white/20 h-10 w-20 rounded-xl"></div>
               </div>
-            </div>
+            )}
 
-            {/* Statistiques */}
-            <div className="relative group">
-              <button className="text-white/90 hover:text-white hover:bg-white/15 px-4 py-2.5 rounded-xl transition-all duration-300 font-medium text-sm flex items-center backdrop-blur-sm border border-transparent hover:border-white/20 shadow-sm hover:shadow-md h-10">
-                <TrendingUp className="w-4 h-4 mr-2" />
-                Statistiques
-                <ChevronDown className="w-4 h-4 ml-2 text-white/70 transition-transform duration-300 group-hover:rotate-180" />
-              </button>
-              <div className="absolute left-1/2 transform -translate-x-1/2 mt-1 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-[110] border border-blue-200/60 animate-in fade-in slide-in-from-top-5 duration-300 w-[500px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto hidden group-hover:block before:content-[''] before:absolute before:w-full before:h-3 before:-top-3 before:bg-transparent">
-                <div className="p-1">
-                  <div className="p-6">
-                    <div className="flex items-center mb-4 pb-3 border-b border-gray-100">
-                      <BarChart className="w-5 h-5 mr-3 text-blue-600" />
-                      <h3 className="text-lg font-bold text-gray-900">
-                        Tableaux de bord
-                      </h3>
-                    </div>
-                    <div className="space-y-1">
-                      <Link
-                        to="/statistiques/incidents"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <AlertCircle className="w-4 h-4 mr-3 text-red-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Incidents</span>
-                      </Link>
-                      <Link
-                        to="/statistiques/individus-interpelles"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <UserX className="w-4 h-4 mr-3 text-orange-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">
-                          Individus interpellés
-                        </span>
-                      </Link>
-                      <Link
-                        to="/statistiques/alertes"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <Siren className="w-4 h-4 mr-3 text-red-600 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Alertes</span>
-                      </Link>
-                      <Link
-                        to="/statistiques/titres-acces-saisis"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <Lock className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">
-                          Titres d'accès saisis
-                        </span>
-                      </Link>
-                      <Link
-                        to="/statistiques/effectifs"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <UsersIcon className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Effectifs</span>
-                      </Link>
-                      <Link
-                        to="/statistiques/kilometrage"
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
-                      >
-                        <Car className="w-4 h-4 mr-3 text-gray-500 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Kilométrage</span>
-                      </Link>
+            {isRoleLoaded && (
+              <>
+                {/* Données Opérations */}
+                <div className="relative group">
+                  <button className="text-white/90 hover:text-white hover:bg-white/15 px-4 py-2.5 rounded-xl transition-all duration-300 font-medium text-sm flex items-center backdrop-blur-sm border border-transparent hover:border-white/20 shadow-sm hover:shadow-md h-10">
+                    <Database className="w-4 h-4 mr-2" />
+                    Données
+                    <ChevronDown className="w-4 h-4 ml-2 text-white/70 transition-transform duration-300 group-hover:rotate-180" />
+                  </button>
+                  <div className="absolute left-1/2 transform -translate-x-1/2 mt-1 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-[110] border border-blue-200/60 animate-in fade-in slide-in-from-top-5 duration-300 w-[900px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto hidden group-hover:block before:content-[''] before:absolute before:w-full before:h-3 before:-top-3 before:bg-transparent">
+                    <div className="p-1">
+                      <div className="grid grid-cols-2 gap-6 p-6">
+                        <div className="space-y-1">
+                          <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                            <Shield className="w-4 h-4 mr-2 text-blue-600" />
+                            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                              Sécurité
+                            </h3>
+                          </div>
+                          <Link
+                            to="/operations/incidents"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <AlertCircle className="w-4 h-4 mr-3 text-red-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">Incidents</span>
+                          </Link>
+                          <Link
+                            to="/operations/individus-interpelles"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <UserX className="w-4 h-4 mr-3 text-orange-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">
+                              Individus interpellés
+                            </span>
+                          </Link>
+                          <Link
+                            to="/operations/titres-acces-saisis"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <Lock className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">
+                              Titres d'accès saisis
+                            </span>
+                          </Link>
+                          <Link
+                            to="/operations/cargaisons-saisies"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <Truck className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">
+                              Cargaisons saisies
+                            </span>
+                          </Link>
+                          <Link
+                            to="/operations/alertes"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <Siren className="w-4 h-4 mr-3 text-red-600 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">Alertes</span>
+                          </Link>
+                          <Link
+                            to="/operations/controle-acces"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <CheckSquare className="w-4 h-4 mr-3 text-green-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">
+                              Contrôle d'accès
+                            </span>
+                          </Link>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                            <Activity className="w-4 h-4 mr-2 text-green-600" />
+                            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                              Ressources
+                            </h3>
+                          </div>
+                          <Link
+                            to="/operations/effectifs"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <UsersIcon className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">Effectifs</span>
+                          </Link>
+                          <Link
+                            to="/operations/kilometrages"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <Car className="w-4 h-4 mr-3 text-gray-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">Kilométrages</span>
+                          </Link>
+                          <Link
+                            to="/operations/produits-exportation"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <Package className="w-4 h-4 mr-3 text-green-600 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">
+                              Produits à l'exportation
+                            </span>
+                          </Link>
+                          <Link
+                            to="/operations/materiels"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <Box className="w-4 h-4 mr-3 text-purple-600 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">Matériels</span>
+                          </Link>
+                          <Link
+                            to="/operations/provision-bord"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <Ship className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">
+                              Provision de bord
+                            </span>
+                          </Link>
+                          <Link
+                            to="/operations/evenements"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <Calendar className="w-4 h-4 mr-3 text-orange-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">Événements</span>
+                          </Link>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Paramètres (admin seulement) */}
-            {userRole === "admin" && (
-              <div className="relative group">
-                <button className="text-white/90 hover:text-white hover:bg-white/15 px-4 py-2.5 rounded-xl transition-all duration-300 font-medium text-sm flex items-center backdrop-blur-sm border border-transparent hover:border-white/20 shadow-sm hover:shadow-md h-10">
-                  <Cog className="w-4 h-4 mr-2" />
-                  Paramètres
-                  <ChevronDown className="w-4 h-4 ml-2 text-white/70 transition-transform duration-300 group-hover:rotate-180" />
-                </button>
-                <div className="absolute left-1/2 transform -translate-x-1/2 mt-1 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-[110] border border-blue-200/60 animate-in fade-in slide-in-from-top-5 duration-300 w-[1200px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto hidden group-hover:block before:content-[''] before:absolute before:w-full before:h-3 before:-top-3 before:bg-transparent">
-                  <div className="p-1">
-                    <div className="grid grid-cols-4 gap-6 p-6">
-                      <div className="space-y-1">
-                        <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
-                          <MapPin className="w-4 h-4 mr-2 text-green-600" />
-                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                            Lieux
+                {/* Statistiques */}
+                <div className="relative group">
+                  <button className="text-white/90 hover:text-white hover:bg-white/15 px-4 py-2.5 rounded-xl transition-all duration-300 font-medium text-sm flex items-center backdrop-blur-sm border border-transparent hover:border-white/20 shadow-sm hover:shadow-md h-10">
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Statistiques
+                    <ChevronDown className="w-4 h-4 ml-2 text-white/70 transition-transform duration-300 group-hover:rotate-180" />
+                  </button>
+                  <div className="absolute left-1/2 transform -translate-x-1/2 mt-1 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-[110] border border-blue-200/60 animate-in fade-in slide-in-from-top-5 duration-300 w-[500px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto hidden group-hover:block before:content-[''] before:absolute before:w-full before:h-3 before:-top-3 before:bg-transparent">
+                    <div className="p-1">
+                      <div className="p-6">
+                        <div className="flex items-center mb-4 pb-3 border-b border-gray-100">
+                          <BarChart className="w-5 h-5 mr-3 text-blue-600" />
+                          <h3 className="text-lg font-bold text-gray-900">
+                            Tableaux de bord
                           </h3>
                         </div>
-                        <Link
-                          to="/parametres/zones"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <MapPin className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Zones</span>
-                        </Link>
-                        <Link
-                          to="/parametres/lieux"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <MapPin className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Lieux</span>
-                        </Link>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
-                          <UsersIcon className="w-4 h-4 mr-2 text-purple-600" />
-                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                            RH
-                          </h3>
+                        <div className="space-y-1">
+                          <Link
+                            to="/statistiques/incidents"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <AlertCircle className="w-4 h-4 mr-3 text-red-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">Incidents</span>
+                          </Link>
+                          <Link
+                            to="/statistiques/individus-interpelles"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <UserX className="w-4 h-4 mr-3 text-orange-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">
+                              Individus interpellés
+                            </span>
+                          </Link>
+                          <Link
+                            to="/statistiques/alertes"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <Siren className="w-4 h-4 mr-3 text-red-600 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">Alertes</span>
+                          </Link>
+                          <Link
+                            to="/statistiques/titres-acces-saisis"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <Lock className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">
+                              Titres d'accès saisis
+                            </span>
+                          </Link>
+                          <Link
+                            to="/statistiques/effectifs"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <UsersIcon className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">Effectifs</span>
+                          </Link>
+                          <Link
+                            to="/statistiques/kilometrage"
+                            className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-xl group backdrop-blur-sm"
+                          >
+                            <Car className="w-4 h-4 mr-3 text-gray-500 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">Kilométrage</span>
+                          </Link>
                         </div>
-                        <Link
-                          to="/parametres/personnels"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <UsersIcon className="w-4 h-4 mr-3 text-green-500 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Personnels</span>
-                        </Link>
-                        <Link
-                          to="/parametres/patrouilleurs"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <Shield className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Patrouilleurs</span>
-                        </Link>
-                        <Link
-                          to="/parametres/equipe"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <UsersIcon className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Équipe</span>
-                        </Link>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
-                          <Car className="w-4 h-4 mr-2 text-blue-600" />
-                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                            Matériels
-                          </h3>
-                        </div>
-                        <Link
-                          to="/parametres/cameras"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <Camera className="w-4 h-4 mr-3 text-gray-500 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Caméras</span>
-                        </Link>
-                        <Link
-                          to="/parametres/vehicule"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <Car className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Véhicules</span>
-                        </Link>
-                        <Link
-                          to="/parametres/type-embarcations"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <Ship className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Embarcations</span>
-                        </Link>
-                        <Link
-                          to="/parametres/type-materiel"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <Box className="w-4 h-4 mr-3 text-purple-600 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Type matériel</span>
-                        </Link>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
-                          <FileText className="w-4 h-4 mr-2 text-orange-600" />
-                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                            Données
-                          </h3>
-                        </div>
-                        <Link
-                          to="/parametres/resultats-alerte"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <Flag className="w-4 h-4 mr-3 text-red-500 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Résultats alerte</span>
-                        </Link>
-                        <Link
-                          to="/parametres/type-document"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <FileText className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Type document</span>
-                        </Link>
-                        <Link
-                          to="/parametres/motifs-saisie"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <Lock className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Motifs saisie</span>
-                        </Link>
-                        <Link
-                          to="/parametres/incidents"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <Lock className="w-4 h-4 mr-3 text-green-500 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Type d'incident</span>
-                        </Link>
-                        <Link
-                          to="/parametres/type-cargaison"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <Truck className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Type cargaison</span>
-                        </Link>
-                        <Link
-                          to="/parametres/type-produits-exportation"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <Package className="w-4 h-4 mr-3 text-green-600 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Produits export</span>
-                        </Link>
-                        <Link
-                          to="/parametres/type-provision-bord"
-                          className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
-                        >
-                          <Ship className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="font-medium">Provision bord</span>
-                        </Link>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+
+                {/* Paramètres (admin seulement) */}
+                {userRole === "admin" && (
+                  <div className="relative group">
+                    <button className="text-white/90 hover:text-white hover:bg-white/15 px-4 py-2.5 rounded-xl transition-all duration-300 font-medium text-sm flex items-center backdrop-blur-sm border border-transparent hover:border-white/20 shadow-sm hover:shadow-md h-10">
+                      <Cog className="w-4 h-4 mr-2" />
+                      Paramètres
+                      <ChevronDown className="w-4 h-4 ml-2 text-white/70 transition-transform duration-300 group-hover:rotate-180" />
+                    </button>
+                    <div className="absolute left-1/2 transform -translate-x-1/2 mt-1 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl z-[110] border border-blue-200/60 animate-in fade-in slide-in-from-top-5 duration-300 w-[1200px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto hidden group-hover:block before:content-[''] before:absolute before:w-full before:h-3 before:-top-3 before:bg-transparent">
+                      <div className="p-1">
+                        <div className="grid grid-cols-4 gap-6 p-6">
+                          <div className="space-y-1">
+                            <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                              <MapPin className="w-4 h-4 mr-2 text-green-600" />
+                              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                                Lieux
+                              </h3>
+                            </div>
+                            <Link
+                              to="/parametres/zones"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <MapPin className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Zones</span>
+                            </Link>
+                            <Link
+                              to="/parametres/lieux"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <MapPin className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Lieux</span>
+                            </Link>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                              <UsersIcon className="w-4 h-4 mr-2 text-purple-600" />
+                              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                                RH
+                              </h3>
+                            </div>
+                            <Link
+                              to="/parametres/personnels"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <UsersIcon className="w-4 h-4 mr-3 text-green-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Personnels</span>
+                            </Link>
+                            <Link
+                              to="/parametres/patrouilleurs"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <Shield className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Patrouilleurs</span>
+                            </Link>
+                            <Link
+                              to="/parametres/equipe"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <UsersIcon className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Équipe</span>
+                            </Link>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                              <Car className="w-4 h-4 mr-2 text-blue-600" />
+                              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                                Matériels
+                              </h3>
+                            </div>
+                            <Link
+                              to="/parametres/cameras"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <Camera className="w-4 h-4 mr-3 text-gray-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Caméras</span>
+                            </Link>
+                            <Link
+                              to="/parametres/vehicule"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <Car className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Véhicules</span>
+                            </Link>
+                            <Link
+                              to="/parametres/type-embarcations"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <Ship className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Embarcations</span>
+                            </Link>
+                            <Link
+                              to="/parametres/type-materiel"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <Box className="w-4 h-4 mr-3 text-purple-600 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Type matériel</span>
+                            </Link>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center mb-3 pb-2 border-b border-gray-100">
+                              <FileText className="w-4 h-4 mr-2 text-orange-600" />
+                              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                                Données
+                              </h3>
+                            </div>
+                            <Link
+                              to="/parametres/resultats-alerte"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <Flag className="w-4 h-4 mr-3 text-red-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">
+                                Résultats alerte
+                              </span>
+                            </Link>
+                            <Link
+                              to="/parametres/type-document"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <FileText className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Type document</span>
+                            </Link>
+                            <Link
+                              to="/parametres/motifs-saisie"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <Lock className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Motifs saisie</span>
+                            </Link>
+                            <Link
+                              to="/parametres/type-incident"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <Lock className="w-4 h-4 mr-3 text-green-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">
+                                Type d'incident
+                              </span>
+                            </Link>
+                            <Link
+                              to="/parametres/type-cargaison"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <Truck className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">
+                                Type cargaison
+                              </span>
+                            </Link>
+                            <Link
+                              to="/parametres/type-produits-exportation"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <Package className="w-4 h-4 mr-3 text-green-600 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">
+                                Produits export
+                              </span>
+                            </Link>
+                            <Link
+                              to="/parametres/type-provision-bord"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                            >
+                              <Ship className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">
+                                Provision bord
+                              </span>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 

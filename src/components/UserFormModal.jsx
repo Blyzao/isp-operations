@@ -24,8 +24,8 @@ function UserFormModal({ isOpen, onClose, userId, isEditMode }) {
     profil: "user",
     emailProfil: "niveau1",
     fonction: "",
-    password: "",
     active: true,
+    firstConnect: true,
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -44,8 +44,8 @@ function UserFormModal({ isOpen, onClose, userId, isEditMode }) {
               profil: data.profil || "user",
               emailProfil: data.emailProfil || "niveau1",
               fonction: data.fonction || "",
-              password: "",
               active: data.active !== undefined ? data.active : true,
+              firstConnect: data.firstConnect !== undefined ? data.firstConnect : true,
             });
           } else {
             setError("Utilisateur non trouvé.");
@@ -81,6 +81,7 @@ function UserFormModal({ isOpen, onClose, userId, isEditMode }) {
             emailProfil: formData.emailProfil,
             fonction: formData.fonction,
             active: formData.active,
+            firstConnect: formData.firstConnect,
           },
           { merge: true }
         );
@@ -94,12 +95,12 @@ function UserFormModal({ isOpen, onClose, userId, isEditMode }) {
             },
             body: JSON.stringify({
               email: formData.email,
-              password: formData.password,
               displayName: formData.nom,
               profil: formData.profil,
               emailProfil: formData.emailProfil,
               fonction: formData.fonction,
               active: formData.active,
+              firstConnect: true,
             }),
           }
         );
@@ -277,46 +278,21 @@ function UserFormModal({ isOpen, onClose, userId, isEditMode }) {
                 />
               </div>
 
-              <div className="space-y-1 col-span-2">
-                <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
-                  <Lock className="w-3 h-3" />
-                  <span>Mot de passe</span>
-                  {!isEditMode && <span className="text-red-500">*</span>}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    placeholder={
-                      isEditMode ? "Non modifiable" : "Minimum 6 caractères"
-                    }
-                    required={!isEditMode}
-                    disabled={isEditMode}
-                  />
-                  {!isEditMode && (
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  )}
+              {!isEditMode && (
+                <div className="space-y-1 col-span-2">
+                  <div className="flex items-center space-x-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <Lock className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">
+                        Mot de passe généré automatiquement
+                      </p>
+                      <p className="text-xs text-blue-700">
+                        Un mot de passe sécurisé de 16 caractères sera généré et envoyé par email à l'utilisateur
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                {isEditMode && (
-                  <p className="text-xs text-gray-500 flex items-center space-x-1">
-                    <Lock className="w-3 h-3" />
-                    <span>Mot de passe non modifiable ici</span>
-                  </p>
-                )}
-              </div>
+              )}
 
               <div className="space-y-1 col-span-2">
                 <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">

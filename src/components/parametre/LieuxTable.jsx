@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { collection, getDocs, setDoc, doc } from "firebase/firestore";
 import {
   MapPin,
@@ -86,12 +86,20 @@ function LieuxTable() {
       reader.onload = async (e) => {
         try {
           const json = JSON.parse(e.target.result);
-          if (!Array.isArray(json)) throw new Error("Le fichier JSON doit être un tableau.");
+          if (!Array.isArray(json))
+            throw new Error("Le fichier JSON doit être un tableau.");
 
           const errors = [];
           for (const item of json) {
-            if (!item.nomLieu || !item.zone || item.latitude == null || item.longitude == null) {
-              errors.push(`Entrée ignorée : ${JSON.stringify(item)} (champs manquants)`);
+            if (
+              !item.nomLieu ||
+              !item.zone ||
+              item.latitude == null ||
+              item.longitude == null
+            ) {
+              errors.push(
+                `Entrée ignorée : ${JSON.stringify(item)} (champs manquants)`
+              );
               continue;
             }
 
@@ -104,8 +112,13 @@ function LieuxTable() {
             const lieuData = {
               nomLieu: item.nomLieu,
               zone: zoneDoc.id,
-              localisation: { lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) },
-              typeLieu: ["PC", "ZAR", "Autre"].includes(item.typeLieu) ? item.typeLieu : "Autre",
+              localisation: {
+                lat: parseFloat(item.latitude),
+                lng: parseFloat(item.longitude),
+              },
+              typeLieu: ["PC", "ZAR", "Autre"].includes(item.typeLieu)
+                ? item.typeLieu
+                : "Autre",
               active: true,
               export: Boolean(item.export),
               avitaillement: Boolean(item.avitaillement),
@@ -114,7 +127,9 @@ function LieuxTable() {
             try {
               await setDoc(doc(collection(db, "lieux")), lieuData);
             } catch (err) {
-              errors.push(`Erreur lors de l'importation de ${item.nomLieu}: ${err.message}`);
+              errors.push(
+                `Erreur lors de l'importation de ${item.nomLieu}: ${err.message}`
+              );
             }
           }
 
@@ -124,7 +139,9 @@ function LieuxTable() {
           }
           fetchLieux();
         } catch (err) {
-          setImportError("Erreur lors de l'importation du fichier JSON: " + err.message);
+          setImportError(
+            "Erreur lors de l'importation du fichier JSON: " + err.message
+          );
           console.error("Erreur JSON:", err);
         }
       };
@@ -136,13 +153,16 @@ function LieuxTable() {
   };
 
   const filteredLieux = lieux.filter((lieu) => {
-    const matchesSearch = lieu.nomLieu.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = lieu.nomLieu
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === "all" ||
       (filterStatus === "active" && lieu.active) ||
       (filterStatus === "inactive" && !lieu.active);
     const matchesZone = filterZone === "all" || lieu.zone === filterZone;
-    const matchesTypeLieu = filterTypeLieu === "all" || lieu.typeLieu === filterTypeLieu;
+    const matchesTypeLieu =
+      filterTypeLieu === "all" || lieu.typeLieu === filterTypeLieu;
     return matchesSearch && matchesStatus && matchesZone && matchesTypeLieu;
   });
 
@@ -182,7 +202,12 @@ function LieuxTable() {
               <label className="flex items-center space-x-1 bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg transition-all duration-200 text-sm cursor-pointer">
                 <Upload className="w-4 h-4" />
                 <span>Importer JSON</span>
-                <input type="file" accept=".json" onChange={handleImport} className="hidden" />
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  className="hidden"
+                />
               </label>
             </div>
           </div>
@@ -240,23 +265,33 @@ function LieuxTable() {
           <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-gray-200">
             <div className="flex items-center space-x-1">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-gray-600">{lieux.filter((l) => l.active).length} actifs</span>
+              <span className="text-xs text-gray-600">
+                {lieux.filter((l) => l.active).length} actifs
+              </span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              <span className="text-xs text-gray-600">{lieux.filter((l) => !l.active).length} inactifs</span>
+              <span className="text-xs text-gray-600">
+                {lieux.filter((l) => !l.active).length} inactifs
+              </span>
             </div>
             <div className="flex items-center space-x-1">
               <MapPin className="w-3 h-3 text-blue-600" />
-              <span className="text-xs text-gray-600">{lieux.filter((l) => l.typeLieu === "PC").length} PC</span>
+              <span className="text-xs text-gray-600">
+                {lieux.filter((l) => l.typeLieu === "PC").length} PC
+              </span>
             </div>
             <div className="flex items-center space-x-1">
               <MapPin className="w-3 h-3 text-blue-500" />
-              <span className="text-xs text-gray-600">{lieux.filter((l) => l.typeLieu === "ZAR").length} ZAR</span>
+              <span className="text-xs text-gray-600">
+                {lieux.filter((l) => l.typeLieu === "ZAR").length} ZAR
+              </span>
             </div>
             <div className="flex items-center space-x-1">
               <MapPin className="w-3 h-3 text-blue-400" />
-              <span className="text-xs text-gray-600">{lieux.filter((l) => l.typeLieu === "Autre").length} Autre</span>
+              <span className="text-xs text-gray-600">
+                {lieux.filter((l) => l.typeLieu === "Autre").length} Autre
+              </span>
             </div>
           </div>
           {importError && (
@@ -271,24 +306,33 @@ function LieuxTable() {
             <div className="text-center py-12">
               <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <h3 className="text-lg font-medium text-gray-900">
-                {searchTerm || filterStatus !== "all" || filterZone !== "all" || filterTypeLieu !== "all"
+                {searchTerm ||
+                filterStatus !== "all" ||
+                filterZone !== "all" ||
+                filterTypeLieu !== "all"
                   ? "Aucun lieu trouvé"
                   : "Aucun lieu"}
               </h3>
               <p className="text-gray-600 text-sm">
-                {searchTerm || filterStatus !== "all" || filterZone !== "all" || filterTypeLieu !== "all"
+                {searchTerm ||
+                filterStatus !== "all" ||
+                filterZone !== "all" ||
+                filterTypeLieu !== "all"
                   ? "Modifiez vos critères de recherche"
                   : "Créez votre premier lieu"}
               </p>
-              {!searchTerm && filterStatus === "all" && filterZone === "all" && filterTypeLieu === "all" && (
-                <button
-                  onClick={handleNewLieu}
-                  className="mt-4 flex items-center space-x-1 mx-auto bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-200 text-sm"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  <span>Créer un lieu</span>
-                </button>
-              )}
+              {!searchTerm &&
+                filterStatus === "all" &&
+                filterZone === "all" &&
+                filterTypeLieu === "all" && (
+                  <button
+                    onClick={handleNewLieu}
+                    className="mt-4 flex items-center space-x-1 mx-auto bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-200 text-sm"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>Créer un lieu</span>
+                  </button>
+                )}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -301,32 +345,56 @@ function LieuxTable() {
                         <span>Lieu</span>
                       </div>
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Zone</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Type</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Export</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Avitaillement</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Statut</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Actions</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
+                      Zone
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
+                      Type
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
+                      Export
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
+                      Avitaillement
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
+                      Statut
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredLieux.map((lieu) => (
-                    <tr key={lieu.id} className="hover:bg-gray-50 transition-colors duration-150">
+                    <tr
+                      key={lieu.id}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
                       <td className="py-3 px-4">
                         <div className="flex items-center space-x-2">
                           <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium bg-gradient-to-r from-blue-600 to-blue-700">
                             {lieu.nomLieu.charAt(0).toUpperCase()}
                           </div>
-                          <div className="text-sm font-medium text-gray-900">{lieu.nomLieu}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {lieu.nomLieu}
+                          </div>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-600">
-                        {zones.find((z) => z.id === lieu.zone)?.nomZone || "N/A"}
+                        {zones.find((z) => z.id === lieu.zone)?.nomZone ||
+                          "N/A"}
                       </td>
                       <td className="py-3 px-4">
                         <span
                           className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium
-                            ${lieu.typeLieu === "PC" ? "bg-blue-100 text-blue-800" : lieu.typeLieu === "ZAR" ? "bg-purple-100 text-purple-800" : "bg-gray-100 text-gray-800"}`}
+                            ${
+                              lieu.typeLieu === "PC"
+                                ? "bg-blue-100 text-blue-800"
+                                : lieu.typeLieu === "ZAR"
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
                         >
                           <MapPin className="w-3 h-3" />
                           <span>{lieu.typeLieu}</span>
@@ -335,27 +403,51 @@ function LieuxTable() {
                       <td className="py-3 px-4">
                         <span
                           className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium
-                            ${lieu.export ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+                            ${
+                              lieu.export
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
                         >
-                          {lieu.export ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                          {lieu.export ? (
+                            <CheckCircle className="w-3 h-3" />
+                          ) : (
+                            <XCircle className="w-3 h-3" />
+                          )}
                           <span>{lieu.export ? "Oui" : "Non"}</span>
                         </span>
                       </td>
                       <td className="py-3 px-4">
                         <span
                           className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium
-                            ${lieu.avitaillement ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+                            ${
+                              lieu.avitaillement
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
                         >
-                          {lieu.avitaillement ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                          {lieu.avitaillement ? (
+                            <CheckCircle className="w-3 h-3" />
+                          ) : (
+                            <XCircle className="w-3 h-3" />
+                          )}
                           <span>{lieu.avitaillement ? "Oui" : "Non"}</span>
                         </span>
                       </td>
                       <td className="py-3 px-4">
                         <span
                           className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium
-                            ${lieu.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                            ${
+                              lieu.active
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
                         >
-                          {lieu.active ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                          {lieu.active ? (
+                            <CheckCircle className="w-3 h-3" />
+                          ) : (
+                            <XCircle className="w-3 h-3" />
+                          )}
                           <span>{lieu.active ? "Actif" : "Inactif"}</span>
                         </span>
                       </td>
@@ -378,8 +470,10 @@ function LieuxTable() {
 
         {filteredLieux.length > 0 && (
           <div className="mt-4 text-center text-gray-600 text-sm">
-            Affichage de {filteredLieux.length} lieu{filteredLieux.length > 1 ? "x" : ""}
-            {lieux.length !== filteredLieux.length && ` sur ${lieux.length} au total`}
+            Affichage de {filteredLieux.length} lieu
+            {filteredLieux.length > 1 ? "x" : ""}
+            {lieux.length !== filteredLieux.length &&
+              ` sur ${lieux.length} au total`}
           </div>
         )}
 

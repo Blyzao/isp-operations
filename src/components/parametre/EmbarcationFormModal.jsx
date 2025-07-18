@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import {
   doc,
   setDoc,
@@ -8,52 +8,58 @@ import {
   query,
   where,
   getDocs,
-  updateDoc,
 } from "firebase/firestore";
 import {
-  MapPin,
+  Ship,
   X,
-  UserPlus,
+  PlusCircle,
   Edit3,
   Loader2,
   ToggleLeft,
   ToggleRight,
 } from "lucide-react";
 
-function ZoneFormModal({ isOpen, onClose, zoneId, isEditMode }) {
+function EmbarcationFormModal({ isOpen, onClose, embarcationId, isEditMode }) {
   const [formData, setFormData] = useState({
-    nomZone: "",
+    nomEmbarcation: "",
     active: true,
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isEditMode && zoneId) {
-      const fetchZone = async () => {
+    if (isEditMode && embarcationId) {
+      const fetchEmbarcation = async () => {
         try {
-          const zoneDoc = await getDoc(doc(db, "zones", zoneId));
-          if (zoneDoc.exists()) {
-            const data = zoneDoc.data();
+          const embarcationDoc = await getDoc(
+            doc(db, "embarcation", embarcationId)
+          );
+          if (embarcationDoc.exists()) {
+            const data = embarcationDoc.data();
             setFormData({
-              nomZone: data.nomZone || "",
-              active: data.active !== undefined ? data.active : true,
+              nomEmbarcation: data.nomEmbarcation || "",
+              active: data.active !== false,
             });
           } else {
-            setError("Zone non trouvée.");
+            setError("Type d'embarcation non trouvé.");
           }
         } catch (err) {
           console.error("Erreur lors du chargement des données:", err);
           setError("Erreur lors du chargement des données.");
         }
       };
-      fetchZone();
+      fetchEmbarcation();
     }
-  }, [isEditMode, zoneId]);
+  }, [isEditMode, embarcationId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const formatNomEmbarcation = (nom) => {
+    if (!nom) return "";
+    return nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
   };
 
   const handleSubmit = async (e) => {
@@ -61,34 +67,39 @@ function ZoneFormModal({ isOpen, onClose, zoneId, isEditMode }) {
     setError(null);
     setLoading(true);
 
+    const formattedNomEmbarcation = formatNomEmbarcation(
+      formData.nomEmbarcation
+    );
+
     try {
-      const zoneRef = doc(
+      // Vérifier l'unicité de nomEmbarcation
+      const q = query(
+        collection(db, "embarcation"),
+        where("nomEmbarcation", "==", formattedNomEmbarcation)
+      );
+      const querySnapshot = await getDocs(q);
+      if (
+        !querySnapshot.empty &&
+        (!isEditMode || querySnapshot.docs[0].id !== embarcationId)
+      ) {
+        setError("Ce type d'embarcation est déjà utilisé.");
+        setLoading(false);
+        return;
+      }
+
+      const embarcationRef = doc(
         db,
-        "zones",
-        isEditMode ? zoneId : doc(collection(db, "zones")).id
+        "embarcation",
+        isEditMode ? embarcationId : doc(collection(db, "embarcation")).id
       );
       await setDoc(
-        zoneRef,
+        embarcationRef,
         {
-          nomZone: formData.nomZone,
+          nomEmbarcation: formattedNomEmbarcation,
           active: formData.active,
         },
         { merge: true }
       );
-
-      // Si active est défini à false, mettre à jour les lieux liés
-      if (isEditMode && !formData.active) {
-        const lieuxQuery = query(
-          collection(db, "lieux"),
-          where("zone", "==", zoneId)
-        );
-        const lieuxSnapshot = await getDocs(lieuxQuery);
-        const updatePromises = lieuxSnapshot.docs.map((lieuDoc) =>
-          updateDoc(doc(db, "lieux", lieuDoc.id), { active: false })
-        );
-        await Promise.all(updatePromises);
-      }
-
       onClose();
     } catch (err) {
       console.error("Erreur lors de l'enregistrement:", err);
@@ -119,17 +130,19 @@ function ZoneFormModal({ isOpen, onClose, zoneId, isEditMode }) {
                 {isEditMode ? (
                   <Edit3 className="w-5 h-5 text-white" />
                 ) : (
-                  <UserPlus className="w-5 h-5 text-white" />
+                  <PlusCircle className="w-5 h-5 text-white" />
                 )}
               </div>
               <div>
                 <h2 className="text-lg font-bold text-white">
-                  {isEditMode ? "Modifier la zone" : "Nouvelle zone"}
+                  {isEditMode
+                    ? "Modifier le type d'embarcation"
+                    : "Nouveau type d'embarcation"}
                 </h2>
                 <p className="text-blue-200 text-xs">
                   {isEditMode
                     ? "Mettre à jour les informations"
-                    : "Créer une nouvelle zone"}
+                    : "Créer un nouveau type d'embarcation"}
                 </p>
               </div>
             </div>
@@ -144,19 +157,19 @@ function ZoneFormModal({ isOpen, onClose, zoneId, isEditMode }) {
 
         <div className="p-6">
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div className="space-y-1">
                 <label className="flex items-center space-x-1 text-xs font-medium text-gray-700">
-                  <MapPin className="w-3 h-3" />
-                  <span>Nom de la zone</span>
+                  <Ship className="w-3 h-3" />
+                  <span>Type d'embarcation</span>
                 </label>
                 <input
                   type="text"
-                  name="nomZone"
-                  value={formData.nomZone}
+                  name="nomEmbarcation"
+                  value={formData.nomEmbarcation}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
-                  placeholder="Saisir le nom de la zone"
+                  placeholder="Saisir le type d'embarcation"
                   required
                 />
               </div>
@@ -168,7 +181,7 @@ function ZoneFormModal({ isOpen, onClose, zoneId, isEditMode }) {
                   ) : (
                     <ToggleLeft className="w-3 h-3 text-gray-400" />
                   )}
-                  <span>Statut de la zone</span>
+                  <span>Statut du type d'embarcation</span>
                 </label>
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <button
@@ -192,24 +205,26 @@ function ZoneFormModal({ isOpen, onClose, zoneId, isEditMode }) {
                         formData.active ? "text-green-700" : "text-gray-700"
                       }`}
                     >
-                      {formData.active ? "Zone active" : "Zone désactivée"}
+                      {formData.active
+                        ? "Type d'embarcation actif"
+                        : "Type d'embarcation désactivé"}
                     </span>
                     <p className="text-xs text-gray-500 mt-1">
                       {formData.active
-                        ? "La zone est utilisable dans l'application"
-                        : "La zone et ses lieux associés sont désactivés"}
+                        ? "Le type d'embarcation est utilisable dans l'application"
+                        : "Le type d'embarcation est désactivé"}
                     </p>
                   </div>
                 </div>
               </div>
 
               {error && (
-                <div className="col-span-2 bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p className="text-red-600 text-xs font-medium">{error}</p>
                 </div>
               )}
 
-              <div className="col-span-2 flex items-center justify-end space-x-2 pt-3 border-t border-gray-200">
+              <div className="flex items-center justify-end space-x-2 pt-3 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={onClose}
@@ -232,7 +247,7 @@ function ZoneFormModal({ isOpen, onClose, zoneId, isEditMode }) {
                       {isEditMode ? (
                         <Edit3 className="w-4 h-4" />
                       ) : (
-                        <UserPlus className="w-4 h-4" />
+                        <PlusCircle className="w-4 h-4" />
                       )}
                       <span>Enregistrer</span>
                     </>
@@ -274,4 +289,4 @@ function ZoneFormModal({ isOpen, onClose, zoneId, isEditMode }) {
   );
 }
 
-export default ZoneFormModal;
+export default EmbarcationFormModal;
