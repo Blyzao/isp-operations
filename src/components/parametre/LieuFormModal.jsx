@@ -552,7 +552,7 @@ function LieuFormModal({ isOpen, onClose, lieuId, isEditMode }) {
                   </div>
                 </div>
 
-                <div className="border border-gray-300 rounded-full overflow-hidden">
+                <div className="border border-gray-300 rounded-lg overflow-hidden">
                   {isGoogleLoaded ? (
                     <GoogleMap
                       mapContainerStyle={mapStyles}

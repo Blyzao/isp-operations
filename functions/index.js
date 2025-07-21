@@ -34,7 +34,7 @@ const corsOptions = {
 
 const corsHandler = cors(corsOptions);
 
-const FRONTEND_URL = "http://localhost:5173";
+const FRONTEND_URL = "https://isp-operations.web.app";
 
 // Fonction pour créer le transporteur email (uniquement quand nécessaire)
 const createTransporter = () => {

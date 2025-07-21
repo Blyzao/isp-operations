@@ -256,25 +256,13 @@ function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
+    <div className="auth-form min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative w-full max-w-md -mt-20">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Bienvenue</h1>
-          <p className="text-gray-600">
-            {showForgotPassword
-              ? "Réinitialisez votre mot de passe"
-              : isSignedUp
-              ? "Vérifiez votre email"
-              : showChangePasswordModal
-              ? "Définissez un nouveau mot de passe"
-              : "Connectez-vous à votre compte"}
-          </p>
-        </div>
+      <div className="relative w-full max-w-md">
 
         <ErrorMessage error={error} onDismiss={dismissError} />
 
@@ -339,7 +327,7 @@ function Auth() {
         )}
 
         <div className="mt-8 text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500" style={{color: '#6b7280 !important'}}>
             En vous connectant, vous acceptez nos{" "}
             <a href="#" className="text-blue-600 hover:underline">
               conditions d'utilisation

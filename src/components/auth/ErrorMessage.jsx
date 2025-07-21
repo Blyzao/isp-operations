@@ -15,7 +15,7 @@ function ErrorMessage({ error, onDismiss }) {
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-red-800 font-medium text-sm leading-relaxed">
+                  <p className="text-red-800 font-medium text-sm leading-relaxed" style={{color: '#991b1b !important'}}>
                     {error}
                   </p>
                 </div>

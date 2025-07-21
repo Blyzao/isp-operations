@@ -1,0 +1,63 @@
+/* Styles CSS pour corriger les problèmes de couleurs transparentes dans l'authentification */
+
+/* Force les couleurs de texte dans les composants auth */
+.auth-form * {
+  color: inherit !important;
+}
+
+/* Labels spécifiques */
+.auth-form label {
+  color: #374151 !important;
+}
+
+/* Textes de titres */
+.auth-form h1, .auth-form h2, .auth-form h3 {
+  color: #1f2937 !important;
+}
+
+/* Paragraphes et textes secondaires */
+.auth-form p {
+  color: #4b5563 !important;
+}
+
+/* Textes d'aide et liens */
+.auth-form .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+.auth-form .text-blue-600 {
+  color: #2563eb !important;
+}
+
+/* Inputs pour éviter la transparence */
+.auth-form input {
+  color: #1f2937 !important;
+}
+
+.auth-form input::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Boutons pour garantir la visibilité du texte */
+.auth-form button {
+  color: inherit !important;
+}
+
+.auth-form button.text-white {
+  color: #ffffff !important;
+}
+
+/* Corrections spécifiques pour certains navigateurs */
+@supports (-webkit-appearance: none) {
+  .auth-form * {
+    -webkit-text-fill-color: inherit !important;
+    color: inherit !important;
+  }
+}
+
+/* Force l'affichage des icônes */
+.auth-form svg {
+  opacity: 1 !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}

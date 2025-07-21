@@ -15,7 +15,7 @@ function AuthForm({
   setShowPassword,
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+    <div className="auth-form bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
         <div className="flex items-center space-x-3">
@@ -34,7 +34,7 @@ function AuthForm({
         <form className="space-y-6" onSubmit={handleAuth}>
           {/* Email */}
           <div className="space-y-2">
-            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700" style={{color: '#374151 !important'}}>
               <Mail className="w-4 h-4" />
               <span>Adresse email</span>
             </label>
@@ -50,7 +50,7 @@ function AuthForm({
 
           {/* Password */}
           <div className="space-y-2">
-            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700" style={{color: '#374151 !important'}}>
               <Lock className="w-4 h-4" />
               <span>Mot de passe</span>
             </label>
@@ -89,6 +89,7 @@ function AuthForm({
             <label
               htmlFor="rememberMe"
               className="text-gray-700 text-sm cursor-pointer select-none font-medium flex items-center space-x-2"
+              style={{color: '#374151 !important'}}
             >
               <span>Se souvenir de moi</span>
               <HelpCircle className="w-4 h-4 text-gray-400" />
@@ -130,6 +131,7 @@ function AuthForm({
               type="button"
               onClick={() => setShowForgotPassword(true)}
               className="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium transition-colors duration-200 flex items-center justify-center space-x-1 w-full"
+              style={{color: '#2563eb !important'}}
               disabled={isLoading}
             >
               <HelpCircle className="w-4 h-4" />

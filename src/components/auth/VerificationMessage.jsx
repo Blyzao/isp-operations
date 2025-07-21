@@ -7,7 +7,7 @@ function VerificationMessage({
   setIsSignedUp,
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+    <div className="auth-form bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-green-600 to-green-700 px-8 py-6">
         <div className="flex items-center space-x-3">

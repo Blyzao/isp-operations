@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { X, MapPin, Navigation, Target, AlertTriangle } from "lucide-react";
-import { GoogleMap, Marker } from "@react-google-maps/api";
+import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
+import { db } from "../../firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 function LocationPrecisionModal({
   isOpen,
@@ -14,6 +16,10 @@ function LocationPrecisionModal({
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
   const [distance, setDistance] = useState(0);
   const [error, setError] = useState(null);
+  const [allLieux, setAllLieux] = useState([]);
+  const [currentZoom, setCurrentZoom] = useState(18);
+  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [showLieuxMarkers, setShowLieuxMarkers] = useState(false);
 
   const mapStyles = { height: "400px", width: "100%" };
 
@@ -59,6 +65,48 @@ function LocationPrecisionModal({
     }
   }, [isOpen]);
 
+  // Chargement des lieux depuis Firestore
+  useEffect(() => {
+    const fetchAllLieux = async () => {
+      try {
+        const q = query(collection(db, "lieux"), where("active", "==", true));
+        const querySnapshot = await getDocs(q);
+        const lieuxList = [];
+        
+        for (const docSnap of querySnapshot.docs) {
+          const data = docSnap.data();
+          if (data.localisation && data.localisation.lat && data.localisation.lng) {
+            // Récupérer le nom de la zone
+            let zoneName = "Zone inconnue";
+            if (data.zone) {
+              const zoneQuery = query(collection(db, "zones"), where("__name__", "==", data.zone));
+              const zoneSnapshot = await getDocs(zoneQuery);
+              if (!zoneSnapshot.empty) {
+                zoneName = zoneSnapshot.docs[0].data().nomZone || "Zone inconnue";
+              }
+            }
+            
+            lieuxList.push({
+              id: docSnap.id,
+              nomLieu: data.nomLieu || "Lieu sans nom",
+              zoneName: zoneName,
+              localisation: data.localisation,
+              typeLieu: data.typeLieu || "Autre"
+            });
+          }
+        }
+        
+        setAllLieux(lieuxList);
+      } catch (err) {
+        console.error("Erreur lors du chargement des lieux:", err);
+      }
+    };
+
+    if (isOpen) {
+      fetchAllLieux();
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (selectedLocation && lieuLocation) {
       const calculatedDistance = calculateDistance(
@@ -70,6 +118,11 @@ function LocationPrecisionModal({
       setDistance(calculatedDistance);
     }
   }, [selectedLocation, lieuLocation]);
+
+  // Gérer l'affichage des marqueurs selon le zoom
+  useEffect(() => {
+    setShowLieuxMarkers(currentZoom >= 14);
+  }, [currentZoom]);
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371; // Radius of the Earth in km
@@ -249,6 +302,11 @@ function LocationPrecisionModal({
                     zoom={18}
                     center={selectedLocation}
                     onClick={handleMapClick}
+                    onZoomChanged={(map) => {
+                      if (map && map.getZoom) {
+                        setCurrentZoom(map.getZoom());
+                      }
+                    }}
                     mapTypeId={viewMode === "satellite" ? "satellite" : "roadmap"}
                     options={{
                       streetViewControl: false,
@@ -273,6 +331,47 @@ function LocationPrecisionModal({
                         }}
                         title="Position du lieu"
                       />
+                    )}
+
+                    {/* Marqueurs pour tous les lieux (affichés selon le zoom) */}
+                    {showLieuxMarkers && allLieux.map((lieu) => (
+                      <Marker
+                        key={`lieu-${lieu.id}`}
+                        position={lieu.localisation}
+                        onClick={() => setSelectedMarker(lieu)}
+                        icon={{
+                          url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z" fill="#10B981"/>
+                            </svg>
+                          `),
+                          scaledSize: { width: 20, height: 20 },
+                        }}
+                        title={lieu.nomLieu}
+                      />
+                    ))}
+
+                    {/* InfoWindow pour afficher les détails d'un lieu */}
+                    {selectedMarker && (
+                      <InfoWindow
+                        position={selectedMarker.localisation}
+                        onCloseClick={() => setSelectedMarker(null)}
+                      >
+                        <div className="p-2 max-w-xs">
+                          <h4 className="font-semibold text-gray-900 text-sm mb-1">
+                            {selectedMarker.nomLieu}
+                          </h4>
+                          <p className="text-xs text-gray-600 mb-1">
+                            Zone: {selectedMarker.zoneName}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Type: {selectedMarker.typeLieu}
+                          </p>
+                          <div className="text-xs text-gray-400 mt-2">
+                            {selectedMarker.localisation.lat.toFixed(6)}, {selectedMarker.localisation.lng.toFixed(6)}
+                          </div>
+                        </div>
+                      </InfoWindow>
                     )}
 
                     {/* Marker for precise position */}
@@ -314,6 +413,10 @@ function LocationPrecisionModal({
                   <p className="mb-1">
                     <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
                     Position du lieu
+                  </p>
+                  <p className="mb-1">
+                    <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                    Autres lieux (zoom ≥ 14)
                   </p>
                   <p className="mb-1">
                     <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span>

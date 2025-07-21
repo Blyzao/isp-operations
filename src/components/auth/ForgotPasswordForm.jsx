@@ -60,7 +60,7 @@ function ForgotPasswordForm({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+    <div className="auth-form bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
