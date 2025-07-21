@@ -14,7 +14,7 @@ lieu : (liste deroulante en cascade de la collection lieux selon le champs zone 
 
 precision : type geoposition (egale à la valeur du champ "localisation" de la collection "lieux" qui coorespond à id lieux du champ lieu de ce formulaire par defaut. maintenant l'utilisateur doit avoir la possibilité de modifier cette valeur a partir d'une fenêtre modale qui va s'ouvrir et l'utilisateur devra préciser cette position. cependant la distance entre la position définie par le champ lieu (position par défaut) et la nouvelle precision ne doit pas depasser 200m. la fenêtre modale pour préciser la localisation doit etre bien large et avoir les deux options avec steet view comme pour la selection de la localisation dans le composant /parametre/lieuFormModal.
 
-categorie : (liste deroulante avec les options suivantes : Sécurité; Sureté)
+categorie : (liste deroulante avec les options suivantes : Sécurité; Sûreté)
 
 typeIncident : (liste deroulante en cascade de la collection typeIncident selon le champs categorie précédent; affiche les nomIncident telque nomCategorie de la collection typeIncident = la valeur dans le champ categorie de ce formulaire.).
 
@@ -86,9 +86,9 @@ DETAILS DE L'INCIDENT :
 
 %details%
 
-%nom% a récupérer dans la collection users en fonction de l'utilisateur connecté
+%nom% a récupérer dans la collection users le champ "nom" en fonction de l'utilisateur connecté
 
-%fonction% a récupérer dans la collection users en fonction de l'utilisateur connecté
+%fonction% a récupérer dans la collection users le champ "fonction" en fonction de l'utilisateur connecté
 
 Bien stylisé tout cela.
 

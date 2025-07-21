@@ -85,7 +85,7 @@ function EmbarcationsTable() {
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center space-x-2">
-              <div className="p-2 bg-gradient-to-r from-blue-900 to-blue-700 rounded-lg">
+              <div className="p-2 bg-gradient-to-r from-blue-900 to-blue-700 rounded-full">
                 <Ship className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -99,7 +99,7 @@ function EmbarcationsTable() {
             </div>
             <button
               onClick={handleNewEmbarcation}
-              className="flex items-center space-x-1 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-200 text-sm"
+              className="flex items-center space-x-1 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Nouveau type d'embarcation</span>
@@ -116,7 +116,7 @@ function EmbarcationsTable() {
                 placeholder="Rechercher par type d'embarcation..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
               />
             </div>
             <div className="relative">
@@ -124,7 +124,7 @@ function EmbarcationsTable() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="pl-8 pr-6 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="pl-8 pr-6 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
                 <option value="all">Tous statuts</option>
                 <option value="active">Actifs</option>
@@ -165,7 +165,7 @@ function EmbarcationsTable() {
               {!searchTerm && filterStatus === "all" && (
                 <button
                   onClick={handleNewEmbarcation}
-                  className="mt-4 flex items-center space-x-1 mx-auto bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-200 text-sm"
+                  className="mt-4 flex items-center space-x-1 mx-auto bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm"
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span>Créer un type d'embarcation</span>
@@ -229,7 +229,7 @@ function EmbarcationsTable() {
                       <td className="py-3 px-4">
                         <button
                           onClick={() => handleEdit(embarcation.id)}
-                          className="flex items-center space-x-1 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all duration-200 text-sm"
+                          className="flex items-center space-x-1 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-full transition-all duration-200 text-sm"
                         >
                           <Edit3 className="w-4 h-4" />
                           <span>Modifier</span>

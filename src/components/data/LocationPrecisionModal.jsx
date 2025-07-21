@@ -15,7 +15,7 @@ function LocationPrecisionModal({
   const [distance, setDistance] = useState(0);
   const [error, setError] = useState(null);
 
-  const mapStyles = { height: "500px", width: "100%" };
+  const mapStyles = { height: "400px", width: "100%" };
 
   useEffect(() => {
     const loadGoogleMaps = async () => {
@@ -131,7 +131,7 @@ function LocationPrecisionModal({
       className="fixed inset-0 z-[102] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-xl border border-gray-100 animate-scale-in mx-4">
+      <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-xl border border-gray-100 animate-scale-in mx-4">
         <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -149,7 +149,7 @@ function LocationPrecisionModal({
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 hover:bg-white/20 rounded-lg transition-colors duration-200"
+              className="p-1.5 hover:bg-white/20 rounded-full transition-colors duration-200"
             >
               <X className="w-4 h-4 text-white" />
             </button>
@@ -234,7 +234,7 @@ function LocationPrecisionModal({
 
               <button
                 onClick={handleReset}
-                className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 text-sm"
+                className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors duration-200 text-sm"
               >
                 Réinitialiser à la position du lieu
               </button>
@@ -309,20 +309,32 @@ function LocationPrecisionModal({
                 )}
               </div>
 
-              <div className="mt-4 text-xs text-gray-500">
-                <p className="mb-1">
-                  <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
-                  Position du lieu
-                </p>
-                <p className="mb-1">
-                  <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span>
-                  Position précise de l'incident (déplaçable)
-                </p>
-                <p className="text-blue-600 font-medium">
-                  Cliquez sur la carte ou déplacez le marqueur rouge pour
-                  préciser la localisation
-                </p>
+              <div className="flex items-start justify-between mt-3">
+                <div className="text-xs text-gray-500">
+                  <p className="mb-1">
+                    <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                    Position du lieu
+                  </p>
+                  <p className="mb-1">
+                    <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                    Position précise de l'incident (déplaçable)
+                  </p>
+                  <p className="text-blue-600 font-medium">
+                    Cliquez sur la carte ou déplacez le marqueur rouge pour
+                    préciser la localisation
+                  </p>
+                </div>
+                
+                <button
+                  onClick={handleSave}
+                  disabled={distance > 200}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium shadow-lg hover:shadow-xl ml-4 text-sm"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Valider</span>
+                </button>
               </div>
+
             </div>
           </div>
 
@@ -334,23 +346,6 @@ function LocationPrecisionModal({
               </div>
             </div>
           )}
-
-          <div className="flex items-center justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-            >
-              Annuler
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={distance > 200}
-              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium shadow-lg hover:shadow-xl"
-            >
-              <MapPin className="w-4 h-4" />
-              <span>Valider la sélection</span>
-            </button>
-          </div>
         </div>
       </div>
 

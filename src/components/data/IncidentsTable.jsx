@@ -15,8 +15,12 @@ import {
   Plus,
   Eye,
   EyeOff,
+  Printer,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { generateIncidentPDF } from "../../utils/pdfGenerator";
+import * as XLSX from 'xlsx';
 
 function IncidentsTable() {
   const [incidents, setIncidents] = useState([]);
@@ -24,11 +28,15 @@ function IncidentsTable() {
   const [lieux, setLieux] = useState([]);
   const [typeIncidents, setTypeIncidents] = useState([]);
   const [users, setUsers] = useState([]);
+  const [personnels, setPersonnels] = useState([]);
+  const [cameras, setCameras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategorie, setFilterCategorie] = useState("all");
   const [filterNiveau, setFilterNiveau] = useState("all");
   const [filterMois, setFilterMois] = useState("all");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
   const [user] = useAuthState(auth);
   const [userProfile, setUserProfile] = useState(null);
   const navigate = useNavigate();
@@ -78,6 +86,25 @@ function IncidentsTable() {
     setUsers(usersList);
   };
 
+  const fetchPersonnels = async () => {
+    const querySnapshot = await getDocs(collection(db, "personnels"));
+    const personnelsList = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      nomPrenom: doc.data().nomPrenom || "N/A",
+      matricule: doc.data().matricule || "N/A",
+    }));
+    setPersonnels(personnelsList);
+  };
+
+  const fetchCameras = async () => {
+    const querySnapshot = await getDocs(collection(db, "cameras"));
+    const camerasList = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      idCamera: doc.data().idCamera || "N/A",
+    }));
+    setCameras(camerasList);
+  };
+
   const fetchIncidents = async () => {
     try {
       setLoading(true);
@@ -116,7 +143,9 @@ function IncidentsTable() {
           fetchZones(),
           fetchLieux(),
           fetchTypeIncidents(),
-          fetchUsers()
+          fetchUsers(),
+          fetchPersonnels(),
+          fetchCameras()
         ]);
       }
     };
@@ -154,6 +183,87 @@ function IncidentsTable() {
     navigate("/operations/incidents/new");
   };
 
+  const handlePrint = async (incident) => {
+    try {
+      await generateIncidentPDF(incident);
+    } catch (error) {
+      console.error("Erreur lors de la génération du PDF:", error);
+    }
+  };
+
+  const exportToExcel = () => {
+    const excelData = filteredIncidents.map(incident => {
+      // Récupérer les données enrichies
+      const zoneNom = zones.find(z => z.id === incident.zone)?.nomZone || "N/A";
+      const lieuNom = lieux.find(l => l.id === incident.lieu)?.nomLieu || "N/A";
+      const typeIncidentNom = typeIncidents.find(t => t.id === incident.typeIncident)?.nomIncident || "N/A";
+      const userNom = users.find(u => u.id === incident.user)?.nom || "N/A";
+      
+      // Construire la liste des intervenants ISP avec noms et matricules
+      const intervenantsISP = incident.intervenantsISP && incident.intervenantsISP.length > 0 
+        ? incident.intervenantsISP.map(id => {
+            const personnel = personnels.find(p => p.id === id);
+            return personnel ? `${personnel.nomPrenom} (${personnel.matricule})` : id;
+          }).join("; ")
+        : "Aucun intervenant ISP";
+      
+      // Construire la liste des caméras avec idCamera
+      const camerasText = incident.cameras && incident.cameras.length > 0 
+        ? incident.cameras.map(id => {
+            const camera = cameras.find(c => c.id === id);
+            return camera ? camera.idCamera : id;
+          }).join(", ")
+        : "PAS DE CAMERA";
+
+      return {
+        'Référence': incident.reference || "",
+        'Date': incident.date ? new Date(incident.date).toLocaleDateString("fr-FR") : "",
+        'Heure': incident.heure || "",
+        'Zone': zoneNom,
+        'Lieu': lieuNom,
+        'Catégorie': incident.categorie || "",
+        'Type d\'incident': typeIncidentNom,
+        'Niveau Impact': incident.niveauImpact || "",
+        'Primo Intervenant': incident.primo || "",
+        'Intervenants ISP': intervenantsISP,
+        'Caméras': camerasText,
+        'Détails de l\'incident': incident.details || "",
+        'Rédigé par': userNom,
+        'Date enregistrement': incident.dateEnreg ? new Date(incident.dateEnreg).toLocaleDateString("fr-FR") + " " + new Date(incident.dateEnreg).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' }) : ""
+      };
+    });
+
+    // Créer le workbook et worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    
+    // Ajuster la largeur des colonnes
+    const colWidths = [
+      { wch: 20 }, // Référence
+      { wch: 12 }, // Date
+      { wch: 8 },  // Heure
+      { wch: 15 }, // Zone
+      { wch: 20 }, // Lieu
+      { wch: 12 }, // Catégorie
+      { wch: 25 }, // Type d'incident
+      { wch: 15 }, // Niveau Impact
+      { wch: 15 }, // Primo Intervenant
+      { wch: 40 }, // Intervenants ISP
+      { wch: 25 }, // Caméras
+      { wch: 50 }, // Détails
+      { wch: 20 }, // Rédigé par
+      { wch: 20 }  // Date enregistrement
+    ];
+    ws['!cols'] = colWidths;
+    
+    XLSX.utils.book_append_sheet(wb, ws, "Incidents");
+    
+    // Télécharger le fichier
+    const fileName = `incidents_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  };
+
+
   const getNiveauColor = (niveau) => {
     switch (niveau) {
       case "Négligeable":
@@ -184,8 +294,10 @@ function IncidentsTable() {
     const matchesCategorie = filterCategorie === "all" || incident.categorie === filterCategorie;
     const matchesNiveau = filterNiveau === "all" || incident.niveauImpact === filterNiveau;
     const matchesMois = filterMois === "all" || incident.mois === filterMois;
+    const matchesDateFrom = !filterDateFrom || incident.date >= filterDateFrom;
+    const matchesDateTo = !filterDateTo || incident.date <= filterDateTo;
 
-    return matchesSearch && matchesCategorie && matchesNiveau && matchesMois;
+    return matchesSearch && matchesCategorie && matchesNiveau && matchesMois && matchesDateFrom && matchesDateTo;
   });
 
   if (loading) {
@@ -205,7 +317,7 @@ function IncidentsTable() {
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center space-x-2">
-              <div className="p-2 bg-gradient-to-r from-red-600 to-red-700 rounded-lg">
+              <div className="p-2 bg-gradient-to-r from-red-600 to-red-700 rounded-full">
                 <AlertTriangle className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -213,13 +325,22 @@ function IncidentsTable() {
                 <p className="text-gray-600 text-sm">Gestion des incidents</p>
               </div>
             </div>
-            <button
-              onClick={handleNew}
-              className="flex items-center space-x-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-2 rounded-lg transition-all duration-200 text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Nouvel incident</span>
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={exportToExcel}
+                className="flex items-center space-x-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>Exporter Excel</span>
+              </button>
+              <button
+                onClick={handleNew}
+                className="flex items-center space-x-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Nouvel incident</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -232,23 +353,39 @@ function IncidentsTable() {
                 placeholder="Rechercher par référence, type, zone, lieu..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 text-sm"
+                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 text-sm"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <input
+                type="date"
+                value={filterDateFrom}
+                onChange={(e) => setFilterDateFrom(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+                placeholder="Date du"
+                title="Date du"
+              />
+              <input
+                type="date"
+                value={filterDateTo}
+                onChange={(e) => setFilterDateTo(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+                placeholder="Date au"
+                title="Date au"
+              />
               <select
                 value={filterCategorie}
                 onChange={(e) => setFilterCategorie(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+                className="px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
               >
                 <option value="all">Toutes catégories</option>
                 <option value="Sécurité">Sécurité</option>
-                <option value="Sureté">Sureté</option>
+                <option value="Sûreté">Sûreté</option>
               </select>
               <select
                 value={filterNiveau}
                 onChange={(e) => setFilterNiveau(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+                className="px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
               >
                 <option value="all">Tous niveaux</option>
                 <option value="Négligeable">Négligeable</option>
@@ -265,12 +402,12 @@ function IncidentsTable() {
             <div className="text-center py-12">
               <AlertTriangle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <h3 className="text-lg font-medium text-gray-900">
-                {searchTerm || filterCategorie !== "all" || filterNiveau !== "all"
+                {searchTerm || filterCategorie !== "all" || filterNiveau !== "all" || filterDateFrom || filterDateTo
                   ? "Aucun incident trouvé"
                   : "Aucun incident"}
               </h3>
               <p className="text-gray-600 text-sm">
-                {searchTerm || filterCategorie !== "all" || filterNiveau !== "all"
+                {searchTerm || filterCategorie !== "all" || filterNiveau !== "all" || filterDateFrom || filterDateTo
                   ? "Modifiez vos critères de recherche"
                   : "Créez votre premier incident"}
               </p>
@@ -294,6 +431,9 @@ function IncidentsTable() {
                     </th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
                       Lieu
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
+                      Catégorie
                     </th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">
                       Type incident
@@ -349,6 +489,11 @@ function IncidentsTable() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm text-gray-600">
+                          {incident.categorie || "N/A"}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="text-sm text-gray-600">
                           {typeIncidents.find(t => t.id === incident.typeIncident)?.nomIncident || "N/A"}
                         </div>
                       </td>
@@ -366,7 +511,7 @@ function IncidentsTable() {
                         <td className="py-3 px-4">
                           <button
                             onClick={() => handleToggleSupprimer(incident.id, incident.supprimer)}
-                            className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs transition-all duration-200 ${
+                            className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs transition-all duration-200 ${
                               incident.supprimer
                                 ? "bg-red-50 text-red-700 hover:bg-red-100"
                                 : "bg-green-50 text-green-700 hover:bg-green-100"
@@ -385,15 +530,22 @@ function IncidentsTable() {
                         <div className="flex space-x-1">
                           <button
                             onClick={() => handleView(incident.id)}
-                            className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg transition-all duration-200"
+                            className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-full transition-all duration-200"
                             title="Afficher"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
+                          <button
+                            onClick={() => handlePrint(incident)}
+                            className="p-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-full transition-all duration-200"
+                            title="Imprimer"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </button>
                           {userProfile?.profil !== "user" && (
                             <button
                               onClick={() => handleEdit(incident.id)}
-                              className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all duration-200"
+                              className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-full transition-all duration-200"
                               title="Modifier"
                             >
                               <Edit3 className="w-4 h-4" />
@@ -402,7 +554,7 @@ function IncidentsTable() {
                           {userProfile?.profil === "admin" && (
                             <button
                               onClick={() => handleToggleSupprimer(incident.id, incident.supprimer)}
-                              className="p-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-all duration-200"
+                              className="p-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-full transition-all duration-200"
                               title="Supprimer"
                             >
                               <Trash2 className="w-4 h-4" />

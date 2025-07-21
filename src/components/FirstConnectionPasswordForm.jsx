@@ -221,7 +221,7 @@ function FirstConnectionPasswordForm({ user, onComplete }) {
               {/* Colonne des exigences */}
               <div className="space-y-4">
                 {/* Exigences de mot de passe */}
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 rounded-full p-4">
                   <h3 className="text-sm font-medium text-gray-700 mb-3">
                     Exigences du mot de passe :
                   </h3>
@@ -260,7 +260,7 @@ function FirstConnectionPasswordForm({ user, onComplete }) {
 
                 {/* Validation de la correspondance */}
                 {formData.confirmPassword && (
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-gray-50 rounded-full p-4">
                     <h3 className="text-sm font-medium text-gray-700 mb-3">
                       Vérification :
                     </h3>
@@ -294,7 +294,7 @@ function FirstConnectionPasswordForm({ user, onComplete }) {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="bg-red-50 border border-red-200 rounded-full p-3">
                 <p className="text-red-600 text-sm font-medium">{error}</p>
               </div>
             )}
@@ -302,7 +302,7 @@ function FirstConnectionPasswordForm({ user, onComplete }) {
             <button
               type="submit"
               disabled={loading || !formData.currentPassword || !passwordRequirements.every((req) => checkPasswordRequirement(formData.newPassword, req.regex)) || formData.newPassword !== formData.confirmPassword}
-              className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white rounded-lg disabled:from-blue-500 disabled:to-blue-400 transition-all duration-200 font-medium"
+              className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white rounded-full disabled:from-blue-500 disabled:to-blue-400 transition-all duration-200 font-medium"
             >
               {loading ? (
                 <>

@@ -348,14 +348,14 @@ function Navbar({ user }) {
                             </div>
                             <Link
                               to="/parametres/zones"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <MapPin className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Zones</span>
                             </Link>
                             <Link
                               to="/parametres/lieux"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <MapPin className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Lieux</span>
@@ -370,21 +370,21 @@ function Navbar({ user }) {
                             </div>
                             <Link
                               to="/parametres/personnels"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <UsersIcon className="w-4 h-4 mr-3 text-green-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Personnels</span>
                             </Link>
                             <Link
                               to="/parametres/patrouilleurs"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <Shield className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Patrouilleurs</span>
                             </Link>
                             <Link
                               to="/parametres/equipe"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <UsersIcon className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Équipe</span>
@@ -399,28 +399,28 @@ function Navbar({ user }) {
                             </div>
                             <Link
                               to="/parametres/cameras"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <Camera className="w-4 h-4 mr-3 text-gray-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Caméras</span>
                             </Link>
                             <Link
                               to="/parametres/vehicule"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <Car className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Véhicules</span>
                             </Link>
                             <Link
                               to="/parametres/type-embarcations"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <Ship className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Embarcations</span>
                             </Link>
                             <Link
                               to="/parametres/type-materiel"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <Box className="w-4 h-4 mr-3 text-purple-600 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Type matériel</span>
@@ -435,7 +435,7 @@ function Navbar({ user }) {
                             </div>
                             <Link
                               to="/parametres/resultats-alerte"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <Flag className="w-4 h-4 mr-3 text-red-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">
@@ -444,21 +444,21 @@ function Navbar({ user }) {
                             </Link>
                             <Link
                               to="/parametres/type-document"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <FileText className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Type document</span>
                             </Link>
                             <Link
                               to="/parametres/motifs-saisie"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <Lock className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Motifs saisie</span>
                             </Link>
                             <Link
                               to="/parametres/type-incident"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <Lock className="w-4 h-4 mr-3 text-green-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">
@@ -467,7 +467,7 @@ function Navbar({ user }) {
                             </Link>
                             <Link
                               to="/parametres/type-cargaison"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <Truck className="w-4 h-4 mr-3 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">
@@ -476,7 +476,7 @@ function Navbar({ user }) {
                             </Link>
                             <Link
                               to="/parametres/type-produits-exportation"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <Package className="w-4 h-4 mr-3 text-green-600 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">
@@ -485,7 +485,7 @@ function Navbar({ user }) {
                             </Link>
                             <Link
                               to="/parametres/type-provision-bord"
-                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-lg group backdrop-blur-sm"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
                             >
                               <Ship className="w-4 h-4 mr-3 text-blue-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">

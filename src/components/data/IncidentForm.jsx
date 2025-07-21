@@ -230,18 +230,21 @@ function IncidentForm() {
 
   // Generate reference for new incidents
   useEffect(() => {
-    if (!isEditMode && !isViewMode && formData.date && formData.typeIncident) {
+    if (!isEditMode && !isViewMode && formData.date && formData.categorie) {
       generateReference();
     }
-  }, [formData.date, formData.typeIncident, isEditMode, isViewMode]);
+  }, [formData.date, formData.categorie, isEditMode, isViewMode]);
 
   const generateReference = async () => {
     try {
-      const selectedType = typeIncidents.find(type => type.id === formData.typeIncident);
-      if (!selectedType) return;
+      if (!formData.categorie) return;
 
       const dateStr = formData.date.replace(/-/g, '');
-      const typePrefix = selectedType.nomIncident.substring(0, 3).toUpperCase();
+      const categoriePrefix = formData.categorie
+        .substring(0, 3)
+        .toUpperCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
       const monthStr = formData.date.substring(0, 7).replace('-', '');
 
       // Count incidents for this month
@@ -251,7 +254,7 @@ function IncidentForm() {
       const count = incidentsSnapshot.docs.length + 1;
       const countStr = count.toString().padStart(3, '0');
 
-      const reference = `${dateStr}-${typePrefix}-${countStr}`;
+      const reference = `${dateStr}-${categoriePrefix}-${countStr}`;
       setFormData(prev => ({ ...prev, reference }));
     } catch (err) {
       console.error("Erreur lors de la génération de la référence:", err);
@@ -351,14 +354,18 @@ function IncidentForm() {
         
         // Envoyer l'email de notification pour les nouveaux incidents
         try {
+          console.log("🔄 Envoi de l'email d'incident en cours...");
+          console.log("Données de l'incident:", incidentData);
+          
           const emailResult = await sendIncidentEmail(incidentData);
+          
           if (emailResult.success) {
-            console.log("Email envoyé avec succès");
+            console.log("✅ Email envoyé avec succès:", emailResult.message);
           } else {
-            console.error("Erreur lors de l'envoi de l'email:", emailResult.error);
+            console.error("❌ Erreur lors de l'envoi de l'email:", emailResult.error);
           }
         } catch (emailError) {
-          console.error("Erreur lors de l'envoi de l'email:", emailError);
+          console.error("💥 Exception lors de l'envoi de l'email:", emailError);
         }
       }
 
@@ -407,7 +414,7 @@ function IncidentForm() {
             </div>
             <button
               onClick={() => navigate("/operations/incidents")}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-all duration-200 shadow-sm"
+              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-full transition-all duration-200 shadow-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="font-medium">Retour à la liste des incidents</span>
@@ -421,14 +428,14 @@ function IncidentForm() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Référence */}
               {formData.reference && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                <div className="bg-gray-50 border border-gray-200 rounded-full p-4">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Hash className="w-5 h-5 text-blue-600" />
+                    <div className="p-2 bg-gray-100 rounded-full">
+                      <Hash className="w-4 h-4 text-gray-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Référence de l'incident</h3>
-                      <p className="text-2xl font-mono font-bold text-blue-600 mt-1">
+                      <h3 className="font-semibold text-gray-900 text-sm">Référence de l'incident</h3>
+                      <p className="text-lg font-mono font-bold text-gray-600 mt-1">
                         {formData.reference}
                       </p>
                     </div>
@@ -440,8 +447,8 @@ function IncidentForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                    <div className="p-1 bg-blue-100 rounded">
-                      <Calendar className="w-4 h-4 text-blue-600" />
+                    <div className="p-1 bg-gray-100 rounded">
+                      <Calendar className="w-4 h-4 text-gray-600" />
                     </div>
                     <span>Date</span>
                   </label>
@@ -450,7 +457,7 @@ function IncidentForm() {
                     name="date"
                     value={formData.date}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                     required
                     disabled={isViewMode}
                   />
@@ -458,8 +465,8 @@ function IncidentForm() {
 
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                    <div className="p-1 bg-blue-100 rounded">
-                      <Clock className="w-4 h-4 text-blue-600" />
+                    <div className="p-1 bg-gray-100 rounded">
+                      <Clock className="w-4 h-4 text-gray-600" />
                     </div>
                     <span>Heure</span>
                   </label>
@@ -468,7 +475,7 @@ function IncidentForm() {
                     name="heure"
                     value={formData.heure}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                     required
                     disabled={isViewMode}
                   />
@@ -479,8 +486,8 @@ function IncidentForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                    <div className="p-1 bg-green-100 rounded">
-                      <MapPin className="w-4 h-4 text-green-600" />
+                    <div className="p-1 bg-gray-100 rounded">
+                      <MapPin className="w-4 h-4 text-gray-600" />
                     </div>
                     <span>Zone</span>
                   </label>
@@ -488,7 +495,7 @@ function IncidentForm() {
                     name="zone"
                     value={formData.zone}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                     required
                     disabled={isViewMode}
                   >
@@ -503,8 +510,8 @@ function IncidentForm() {
 
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                    <div className="p-1 bg-green-100 rounded">
-                      <MapPin className="w-4 h-4 text-green-600" />
+                    <div className="p-1 bg-gray-100 rounded">
+                      <MapPin className="w-4 h-4 text-gray-600" />
                     </div>
                     <span>Lieu</span>
                   </label>
@@ -512,7 +519,7 @@ function IncidentForm() {
                     name="lieu"
                     value={formData.lieu}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm hover:shadow-md disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                     required
                     disabled={!formData.zone || isViewMode}
                   >
@@ -528,15 +535,15 @@ function IncidentForm() {
 
               {/* Précision de localisation */}
               {formData.precision && (
-                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-6">
+                <div className="bg-gray-50 border border-gray-200 rounded-full p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Navigation className="w-5 h-5 text-blue-600" />
+                      <div className="p-2 bg-gray-100 rounded-full">
+                        <Navigation className="w-4 h-4 text-gray-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">Position précise</h3>
-                        <p className="text-sm text-blue-700 mt-1">
+                        <h3 className="font-semibold text-gray-900 text-sm">Position précise</h3>
+                        <p className="text-xs text-gray-600 mt-1">
                           Lat: {formData.precision.lat?.toFixed(6)}, Lng: {formData.precision.lng?.toFixed(6)}
                         </p>
                       </div>
@@ -545,7 +552,7 @@ function IncidentForm() {
                       <button
                         type="button"
                         onClick={() => setLocationModalOpen(true)}
-                        className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+                        className="px-3 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-200 font-medium text-xs"
                       >
                         Préciser la position
                       </button>
@@ -558,8 +565,8 @@ function IncidentForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                    <div className="p-1 bg-purple-100 rounded">
-                      <Shield className="w-4 h-4 text-purple-600" />
+                    <div className="p-1 bg-gray-100 rounded">
+                      <Shield className="w-4 h-4 text-gray-600" />
                     </div>
                     <span>Catégorie</span>
                   </label>
@@ -567,19 +574,19 @@ function IncidentForm() {
                     name="categorie"
                     value={formData.categorie}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                     required
                     disabled={isViewMode}
                   >
                     <option value="Sécurité">Sécurité</option>
-                    <option value="Sureté">Sureté</option>
+                    <option value="Sûreté">Sûreté</option>
                   </select>
                 </div>
 
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                    <div className="p-1 bg-red-100 rounded">
-                      <AlertTriangle className="w-4 h-4 text-red-600" />
+                    <div className="p-1 bg-gray-100 rounded">
+                      <AlertTriangle className="w-4 h-4 text-gray-600" />
                     </div>
                     <span>Type d'incident</span>
                   </label>
@@ -587,7 +594,7 @@ function IncidentForm() {
                     name="typeIncident"
                     value={formData.typeIncident}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm hover:shadow-md disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                     required
                     disabled={!formData.categorie || isViewMode}
                   >
@@ -605,8 +612,8 @@ function IncidentForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                    <div className="p-1 bg-orange-100 rounded">
-                      <Target className="w-4 h-4 text-orange-600" />
+                    <div className="p-1 bg-gray-100 rounded">
+                      <Target className="w-4 h-4 text-gray-600" />
                     </div>
                     <span>Niveau d'impact</span>
                   </label>
@@ -614,7 +621,7 @@ function IncidentForm() {
                     name="niveauImpact"
                     value={formData.niveauImpact}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md font-medium ${getNiveauColor(formData.niveauImpact)}`}
+                    className={`w-full px-3 py-2 border rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm font-medium ${getNiveauColor(formData.niveauImpact)}`}
                     required
                     disabled={isViewMode}
                   >
@@ -627,8 +634,8 @@ function IncidentForm() {
 
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                    <div className="p-1 bg-blue-100 rounded">
-                      <Users className="w-4 h-4 text-blue-600" />
+                    <div className="p-1 bg-gray-100 rounded">
+                      <Users className="w-4 h-4 text-gray-600" />
                     </div>
                     <span>Primo intervenant</span>
                   </label>
@@ -636,7 +643,7 @@ function IncidentForm() {
                     name="primo"
                     value={formData.primo}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                     required
                     disabled={isViewMode}
                   >
@@ -650,8 +657,8 @@ function IncidentForm() {
               {selectedTypeIncident?.quantite && (
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                    <div className="p-1 bg-indigo-100 rounded">
-                      <Package className="w-4 h-4 text-indigo-600" />
+                    <div className="p-1 bg-gray-100 rounded">
+                      <Package className="w-4 h-4 text-gray-600" />
                     </div>
                     <span>Quantité</span>
                   </label>
@@ -661,7 +668,7 @@ function IncidentForm() {
                       name="quantite"
                       value={formData.quantite}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                       placeholder="Saisir la quantité"
                       min="0"
                       step="0.01"
@@ -674,8 +681,8 @@ function IncidentForm() {
               {/* Intervenants ISP */}
               <div className="space-y-4">
                 <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                  <div className="p-1 bg-blue-100 rounded">
-                    <Users className="w-4 h-4 text-blue-600" />
+                  <div className="p-1 bg-gray-100 rounded">
+                    <Users className="w-4 h-4 text-gray-600" />
                   </div>
                   <span>Intervenants ISP</span>
                 </label>
@@ -685,14 +692,14 @@ function IncidentForm() {
                     value={newMatricule}
                     onChange={(e) => setNewMatricule(e.target.value)}
                     placeholder="Saisir le matricule du personnel"
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleMatriculeAdd())}
                     disabled={isViewMode}
                   />
                   <button
                     type="button"
                     onClick={handleMatriculeAdd}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center space-x-2 font-medium shadow-lg hover:shadow-xl"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2 font-medium text-sm"
                     disabled={isViewMode}
                   >
                     <Plus className="w-4 h-4" />
@@ -700,7 +707,7 @@ function IncidentForm() {
                   </button>
                 </div>
                 {matriculeValidation && (
-                  <div className="flex items-center space-x-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+                  <div className="flex items-center space-x-2 text-gray-600 text-sm bg-red-50 p-3 rounded-full">
                     <AlertCircle className="w-4 h-4" />
                     <span>{matriculeValidation}</span>
                   </div>
@@ -714,12 +721,12 @@ function IncidentForm() {
                         className="flex items-center space-x-2 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 px-4 py-2 rounded-full text-sm border border-blue-300 shadow-sm"
                       >
                         <span className="font-medium">{personnel.nomPrenom}</span>
-                        <span className="text-blue-600 font-mono text-xs">({personnel.matricule})</span>
+                        <span className="text-gray-600 font-mono text-xs">({personnel.matricule})</span>
                         {!isViewMode && (
                           <button
                             type="button"
                             onClick={() => handleMatriculeRemove(personnelId)}
-                            className="text-red-500 hover:text-red-700 transition-colors p-1 hover:bg-red-100 rounded-full"
+                            className="text-red-500 hover:text-red-700 transition-colors p-1 hover:bg-gray-100 rounded-full"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -744,14 +751,14 @@ function IncidentForm() {
                     value={newCameraId}
                     onChange={(e) => setNewCameraId(e.target.value)}
                     placeholder="Saisir l'ID de la caméra"
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleCameraAdd())}
                     disabled={isViewMode}
                   />
                   <button
                     type="button"
                     onClick={handleCameraAdd}
-                    className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 flex items-center space-x-2 font-medium shadow-lg hover:shadow-xl"
+                    className="px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 font-medium text-sm"
                     disabled={isViewMode}
                   >
                     <Plus className="w-4 h-4" />
@@ -759,7 +766,7 @@ function IncidentForm() {
                   </button>
                 </div>
                 {cameraValidation && (
-                  <div className="flex items-center space-x-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+                  <div className="flex items-center space-x-2 text-gray-600 text-sm bg-red-50 p-3 rounded-full">
                     <AlertCircle className="w-4 h-4" />
                     <span>{cameraValidation}</span>
                   </div>
@@ -778,7 +785,7 @@ function IncidentForm() {
                           <button
                             type="button"
                             onClick={() => handleCameraRemove(cameraId)}
-                            className="text-red-500 hover:text-red-700 transition-colors p-1 hover:bg-red-100 rounded-full"
+                            className="text-red-500 hover:text-red-700 transition-colors p-1 hover:bg-gray-100 rounded-full"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -792,8 +799,8 @@ function IncidentForm() {
               {/* Détails */}
               <div className="space-y-2">
                 <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
-                  <div className="p-1 bg-teal-100 rounded">
-                    <FileText className="w-4 h-4 text-teal-600" />
+                  <div className="p-1 bg-gray-100 rounded">
+                    <FileText className="w-4 h-4 text-gray-600" />
                   </div>
                   <span>Détails de l'incident</span>
                 </label>
@@ -802,7 +809,7 @@ function IncidentForm() {
                   value={formData.details}
                   onChange={handleInputChange}
                   rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none bg-white shadow-sm hover:shadow-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none bg-gray-50 text-sm"
                   placeholder="Décrire les détails de l'incident, les circonstances, les actions menées..."
                   disabled={isViewMode}
                 />
@@ -812,8 +819,8 @@ function IncidentForm() {
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                   <div className="flex items-center space-x-2">
-                    <AlertCircle className="w-5 h-5 text-red-600" />
-                    <p className="text-red-600 font-medium">{error}</p>
+                    <AlertCircle className="w-5 h-5 text-gray-600" />
+                    <p className="text-gray-600 font-medium">{error}</p>
                   </div>
                 </div>
               )}
@@ -824,14 +831,14 @@ function IncidentForm() {
                   <button
                     type="button"
                     onClick={() => navigate("/operations/incidents")}
-                    className="px-8 py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-xl transition-all duration-200 font-medium border border-gray-300"
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-all duration-200 font-medium border border-gray-300 text-sm"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium text-sm"
                   >
                     {loading ? (
                       <>

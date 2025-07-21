@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
+const cors = require("cors");
 
 // Initialiser Firebase Admin une seule fois
 if (!admin.apps.length) {
@@ -14,6 +15,24 @@ const EMAIL_CONFIG = {
   service: "gmail",
   support: "support@nexion.com",
 };
+
+// Configuration CORS pour autoriser plusieurs domaines
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",          // Développement local
+    "http://localhost:3000",          // Alternative dev
+    "https://isp-operations.web.app",   // Firebase Hosting
+    "https://isp-operations.firebaseapp.com", // Firebase Hosting alternative
+    // Ajoutez ici votre domaine de production personnalisé si vous en avez un
+    // "https://votre-domaine.com"
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+};
+
+const corsHandler = cors(corsOptions);
 
 const FRONTEND_URL = "http://localhost:5173";
 
@@ -963,17 +982,10 @@ exports.activateFirstConnect = functions.https.onRequest(async (req, res) => {
 // EMAIL DE NOTIFICATION D'INCIDENT
 // =====================================================
 exports.sendIncidentNotification = functions.https.onRequest(async (req, res) => {
-  // Headers CORS
-  res.set("Access-Control-Allow-Origin", "*");
-  res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  // Utiliser le handler CORS configuré - Version avec CORS update
+  return corsHandler(req, res, async () => {
 
-  if (req.method === "OPTIONS") {
-    res.status(200).send("");
-    return;
-  }
-
-  console.log("🔵 sendIncidentNotification appelée");
+  console.log("🔵 sendIncidentNotification appelée avec CORS configuré");
   const incidentData = req.body;
   
   console.log("📋 Données d'incident reçues:", {
@@ -1040,106 +1052,106 @@ exports.sendIncidentNotification = functions.https.onRequest(async (req, res) =>
     }
 
     // Construire le contenu de l'email
-    const subject = `${incidentData.typeIncident} ${incidentData.lieu}`;
+    const subject = `${incidentData.typeIncident} (${incidentData.lieu})`;
     
     // Construire la liste des intervenants ISP
     const intervenantsText = incidentData.personnels && incidentData.personnels.length > 0 
       ? incidentData.personnels.map(p => `${p.nomPrenom} (${p.matricule})`).join('; ')
       : "Aucun intervenant ISP";
     
-    // Construire la liste des caméras
+    // Construire la liste des caméras (maintenant directement des strings idCamera)
     const camerasText = incidentData.cameras && incidentData.cameras.length > 0 
-      ? incidentData.cameras.map(c => c.idCamera).join('; ')
+      ? incidentData.cameras.join(', ')
       : "PAS DE CAMERA";
 
     const content = `
-      <div class="info-box">
-        <h2 style="color: #dc2626; margin-bottom: 16px;">🚨 Nouvel Incident Signalé</h2>
-        <p><strong>Un nouvel incident a été signalé sur la plateforme Nexion.</strong></p>
-      </div>
-      
-      <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <h3 style="color: #1e3a8a; margin-bottom: 16px;">📋 Détails de l'incident</h3>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f9f9f9;">
         
-        <div style="margin-bottom: 12px;">
-          <strong>RÉFÉRENCE :</strong> ${incidentData.reference}
+        <div style="background: transparent; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>RÉFÉRENCE :</strong> ${incidentData.reference}
+          </div>
+          
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>DATE :</strong> ${incidentData.date.split('-').reverse().join('-')}
+          </div>
+          
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>HEURE :</strong> ${incidentData.heure}
+          </div>
+          
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>ZONE :</strong> ${incidentData.zone}
+          </div>
+          
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>LIEU :</strong> ${incidentData.lieu}
+          </div>
+          
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>CATÉGORIE :</strong> ${incidentData.categorie}
+          </div>
+          
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>TYPE D'INCIDENT :</strong> ${incidentData.typeIncident}
+          </div>
+          
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>NIVEAU D'IMPACT :</strong> 
+            <span style="padding: 4px 8px; border-radius: 4px; font-weight: bold; ${
+              incidentData.niveauImpact === 'Catastrophique' ? 'background: #fee2e2; color: #dc2626;' :
+              incidentData.niveauImpact === 'Majeur' ? 'background: #fed7aa; color: #ea580c;' :
+              incidentData.niveauImpact === 'Modéré' ? 'background: #fef3c7; color: #d97706;' :
+              'background: #dcfce7; color: #16a34a;'
+            }">${incidentData.niveauImpact}</span>
+          </div>
+          
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>PRIMO INTERVENANT :</strong> ${incidentData.primo}
+          </div>
+          
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>INTERVENANTS ISP :</strong> ${intervenantsText}
+          </div>
+          
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>CAMÉRAS :</strong> ${camerasText}
+          </div>
+          
+          ${incidentData.quantite && incidentData.quantite !== "" ? `
+          <div style="margin-bottom: 12px; font-size: 14px;">
+            <strong>QUANTITÉ :</strong> ${incidentData.quantite}
+          </div>
+          ` : ''}
         </div>
-        
-        <div style="margin-bottom: 12px;">
-          <strong>DATE :</strong> ${incidentData.date}
-        </div>
-        
-        <div style="margin-bottom: 12px;">
-          <strong>HEURE :</strong> ${incidentData.heure}
-        </div>
-        
-        <div style="margin-bottom: 12px;">
-          <strong>ZONE :</strong> ${incidentData.zone}
-        </div>
-        
-        <div style="margin-bottom: 12px;">
-          <strong>LIEU :</strong> ${incidentData.lieu}
-        </div>
-        
-        <div style="margin-bottom: 12px;">
-          <strong>CATÉGORIE :</strong> ${incidentData.categorie}
-        </div>
-        
-        <div style="margin-bottom: 12px;">
-          <strong>TYPE D'INCIDENT :</strong> ${incidentData.typeIncident}
-        </div>
-        
-        <div style="margin-bottom: 12px;">
-          <strong>NIVEAU D'IMPACT :</strong> 
-          <span style="padding: 4px 8px; border-radius: 4px; font-weight: bold; ${
-            incidentData.niveauImpact === 'Catastrophique' ? 'background: #fee2e2; color: #dc2626;' :
-            incidentData.niveauImpact === 'Majeur' ? 'background: #fed7aa; color: #ea580c;' :
-            incidentData.niveauImpact === 'Modéré' ? 'background: #fef3c7; color: #d97706;' :
-            'background: #dcfce7; color: #16a34a;'
-          }">${incidentData.niveauImpact}</span>
-        </div>
-        
-        <div style="margin-bottom: 12px;">
-          <strong>PRIMO INTERVENANT :</strong> ${incidentData.primo}
-        </div>
-        
-        <div style="margin-bottom: 12px;">
-          <strong>INTERVENANTS ISP :</strong> ${intervenantsText}
-        </div>
-        
-        <div style="margin-bottom: 12px;">
-          <strong>CAMÉRAS :</strong> ${camerasText}
-        </div>
-        
-        ${incidentData.quantite && incidentData.quantite !== "" ? `
-        <div style="margin-bottom: 12px;">
-          <strong>QUANTITÉ :</strong> ${incidentData.quantite}
-        </div>
-        ` : ''}
-      </div>
       
       ${incidentData.details ? `
-      <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <h3 style="color: #1e3a8a; margin-bottom: 12px;">📝 Détails de l'incident</h3>
-        <p style="white-space: pre-wrap; line-height: 1.6;">${incidentData.details}</p>
+      <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e3a8a;">
+        <h3 style="color: #1e3a8a; margin-bottom: 16px; font-size: 18px;">📝 Détails de l'incident</h3>
+        <p style="white-space: pre-wrap; line-height: 1.6; font-size: 14px;">${incidentData.details}</p>
       </div>
       ` : ''}
       
-      <div style="background: #e0f2fe; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0284c7;">
-        <p><strong>👤 Signalé par :</strong> ${incidentData.user?.nom || "Utilisateur"} - ${incidentData.user?.fonction || "Fonction non spécifiée"}</p>
-        <p><strong>📅 Date d'enregistrement :</strong> ${new Date(incidentData.dateEnreg).toLocaleDateString("fr-FR")} à ${new Date(incidentData.dateEnreg).toLocaleTimeString("fr-FR")}</p>
-      </div>
-      
-      <div class="cta-container">
-        <a href="${FRONTEND_URL}/operations/incidents" class="cta-button">📋 Voir tous les incidents</a>
-      </div>
-      
-      <div class="divider"></div>
-      
-      <div class="security-notice">
-        <p><strong>🔒 Confidentiel :</strong> Ce message contient des informations sensibles. Ne pas transférer sans autorisation.</p>
-      </div>
-    `;
+        
+        <div style="background: #f8fafc; padding: 15px; border-radius: 6px; margin-top: 20px; border-left: 3px solid #0284c7;">
+            <div style="color: #1f2937; font-weight: 600; margin-bottom: 5px;">
+                ${incidentData.user?.nom || "Utilisateur"}
+            </div>
+            <div style="color: #6b7280; font-size: 14px;">
+                ${incidentData.user?.fonction || "Fonction non spécifiée"}
+            </div>
+        </div>
+        
+</body>
+</html>`;
 
     // Envoyer l'email à tous les destinataires
     const transporter = createTransporter();
@@ -1148,11 +1160,7 @@ exports.sendIncidentNotification = functions.https.onRequest(async (req, res) =>
         from: `Nexion <${EMAIL_CONFIG.user}>`,
         to: recipient.email,
         subject: `[INCIDENT] ${subject}`,
-        html: getEmailTemplate(
-          content,
-          `Incident ${incidentData.niveauImpact}`,
-          "default"
-        ),
+        html: content, // Utiliser directement le contenu sans template
       };
       
       return transporter.sendMail(mailOptions);
@@ -1176,4 +1184,5 @@ exports.sendIncidentNotification = functions.https.onRequest(async (req, res) =>
       details: error.message,
     });
   }
+  }); // Fermeture du handler CORS
 });

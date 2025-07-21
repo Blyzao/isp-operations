@@ -131,7 +131,7 @@ function TypeProduitExportationFormModal({
         <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-6 py-4 rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+              <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
                 {isEditMode ? (
                   <Edit3 className="w-5 h-5 text-white" />
                 ) : (
@@ -153,7 +153,7 @@ function TypeProduitExportationFormModal({
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 hover:bg-white/20 rounded-lg transition-colors duration-200"
+              className="p-1.5 hover:bg-white/20 rounded-full transition-colors duration-200"
             >
               <X className="w-4 h-4 text-white" />
             </button>
@@ -188,7 +188,7 @@ function TypeProduitExportationFormModal({
                   )}
                   <span>Statut du type de produit</span>
                 </label>
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-full border border-gray-200">
                   <button
                     type="button"
                     onClick={() =>
@@ -224,7 +224,7 @@ function TypeProduitExportationFormModal({
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="bg-red-50 border border-red-200 rounded-full p-3">
                   <p className="text-red-600 text-xs font-medium">{error}</p>
                 </div>
               )}
@@ -233,14 +233,14 @@ function TypeProduitExportationFormModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 text-sm"
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200 text-sm"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white rounded-lg disabled:from-blue-500 disabled:to-blue-400 transition-all duration-200 text-sm"
+                  className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white rounded-full disabled:from-blue-500 disabled:to-blue-400 transition-all duration-200 text-sm"
                 >
                   {loading ? (
                     <>
