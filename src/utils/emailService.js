@@ -158,7 +158,20 @@ const getEmailRecipients = (userDocs, emailData) => {
     const userData = userDoc.data();
     const emailProfil = userData.emailProfil;
     
+    // Vérifications préliminaires pour exclure les utilisateurs non éligibles
     if (!emailProfil || !userData.email) return;
+    
+    // EXCLUSION 1: Utilisateur inactif (active = false)
+    if (userData.active === false) {
+      console.log(`🚫 Utilisateur exclu (inactif): ${userData.email}`);
+      return;
+    }
+    
+    // EXCLUSION 2: Compte non vérifié (emailVerified = false)
+    if (userData.emailVerified === false) {
+      console.log(`🚫 Utilisateur exclu (email non vérifié): ${userData.email}`);
+      return;
+    }
     
     let shouldReceive = false;
     
@@ -180,6 +193,7 @@ const getEmailRecipients = (userDocs, emailData) => {
     }
     
     if (shouldReceive) {
+      console.log(`✅ Destinataire ajouté: ${userData.email} (${emailProfil})`);
       recipients.push({
         email: userData.email,
         nom: userData.nom || "Utilisateur",
