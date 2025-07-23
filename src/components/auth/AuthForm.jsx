@@ -43,8 +43,9 @@ function AuthForm({
               placeholder="exemple@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
               required
+              style={{ color: '#111827 !important' }}
             />
           </div>
 
@@ -60,8 +61,9 @@ function AuthForm({
                 placeholder="Votre mot de passe"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
                 required
+                style={{ color: '#111827 !important' }}
               />
               <button
                 type="button"
@@ -140,6 +142,27 @@ function AuthForm({
           </div>
         </form>
       </div>
+      
+      <style>{`
+        /* Force la couleur du texte dans les champs d'authentification */
+        .auth-form input[type="email"],
+        .auth-form input[type="password"],
+        .auth-form input[type="text"] {
+          color: #111827 !important;
+          -webkit-text-fill-color: #111827 !important;
+        }
+        .auth-form input::placeholder {
+          color: #6b7280 !important;
+          opacity: 1 !important;
+        }
+        .auth-form input:-webkit-autofill,
+        .auth-form input:-webkit-autofill:hover,
+        .auth-form input:-webkit-autofill:focus {
+          -webkit-text-fill-color: #111827 !important;
+          -webkit-box-shadow: 0 0 0px 1000px #f9fafb inset !important;
+          transition: background-color 5000s ease-in-out 0s !important;
+        }
+      `}</style>
     </div>
   );
 }

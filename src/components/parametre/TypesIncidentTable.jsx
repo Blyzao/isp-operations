@@ -64,18 +64,23 @@ function TypesIncidentTable() {
     fetchTypesIncident();
   };
 
-  const filteredTypesIncident = typesIncident.filter((typeIncident) => {
-    const matchesSearch = typeIncident.nomIncident
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      filterStatus === "all" ||
-      (filterStatus === "active" && typeIncident.active) ||
-      (filterStatus === "inactive" && !typeIncident.active);
-    const matchesCategorie =
-      filterCategorie === "all" || typeIncident.categorie === filterCategorie;
-    return matchesSearch && matchesStatus && matchesCategorie;
-  });
+  const filteredTypesIncident = typesIncident
+    .filter((typeIncident) => {
+      const matchesSearch = typeIncident.nomIncident
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        filterStatus === "all" ||
+        (filterStatus === "active" && typeIncident.active) ||
+        (filterStatus === "inactive" && !typeIncident.active);
+      const matchesCategorie =
+        filterCategorie === "all" || typeIncident.categorie === filterCategorie;
+      return matchesSearch && matchesStatus && matchesCategorie;
+    })
+    .sort((a, b) => {
+      // Tri par nomIncident alphabétiquement
+      return a.nomIncident.localeCompare(b.nomIncident);
+    });
 
   if (loading) {
     return (

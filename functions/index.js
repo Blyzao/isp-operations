@@ -16,12 +16,15 @@ const EMAIL_CONFIG = {
   support: "support@nexion.com",
 };
 
-// Configuration CORS pour autoriser plusieurs domaines
+// Configuration CORS pour la production et développement
 const corsOptions = {
-  origin: [
-    "http://localhost:5173",          // Développement local
-    "http://localhost:3000",          // Alternative dev
+  origin: process.env.NODE_ENV === 'development' ? [
+    "http://localhost:5173",          // Développement local seulement
+    "http://localhost:3000",          // Alternative dev seulement
     "https://isp-operations.web.app",   // Firebase Hosting
+    "https://isp-operations.firebaseapp.com", // Firebase Hosting alternative
+  ] : [
+    "https://isp-operations.web.app",   // Firebase Hosting (production)
     "https://isp-operations.firebaseapp.com", // Firebase Hosting alternative
     // Ajoutez ici votre domaine de production personnalisé si vous en avez un
     // "https://votre-domaine.com"

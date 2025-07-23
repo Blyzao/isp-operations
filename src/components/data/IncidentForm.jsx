@@ -414,10 +414,10 @@ function IncidentForm() {
             </div>
             <button
               onClick={() => navigate("/operations/incidents")}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-full transition-all duration-200 shadow-sm"
+              className="flex items-center space-x-2 px-4 py-2 bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent rounded-full transition-all duration-200 shadow-sm font-medium"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="font-medium">Retour à la liste des incidents</span>
+              <span>Retour à la liste des incidents</span>
             </button>
           </div>
         </div>
@@ -524,11 +524,13 @@ function IncidentForm() {
                     disabled={!formData.zone || isViewMode}
                   >
                     <option value="">Sélectionner un lieu</option>
-                    {filteredLieux.map((lieu) => (
-                      <option key={lieu.id} value={lieu.id}>
-                        {lieu.nomLieu}
-                      </option>
-                    ))}
+                    {filteredLieux
+                      .sort((a, b) => a.nomLieu.localeCompare(b.nomLieu))
+                      .map((lieu) => (
+                        <option key={lieu.id} value={lieu.id}>
+                          {lieu.nomLieu}
+                        </option>
+                      ))}
                   </select>
                 </div>
               </div>
@@ -599,11 +601,13 @@ function IncidentForm() {
                     disabled={!formData.categorie || isViewMode}
                   >
                     <option value="">Sélectionner un type d'incident</option>
-                    {filteredTypeIncidents.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.nomIncident}
-                      </option>
-                    ))}
+                    {filteredTypeIncidents
+                      .sort((a, b) => a.nomIncident.localeCompare(b.nomIncident))
+                      .map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.nomIncident}
+                        </option>
+                      ))}
                   </select>
                 </div>
               </div>
@@ -867,6 +871,7 @@ function IncidentForm() {
           defaultLocation={formData.precision}
           lieuLocation={lieux.find(l => l.id === formData.lieu)?.localisation}
           onLocationUpdate={handleLocationUpdate}
+          currentLieuId={formData.lieu} // Passer l'ID du lieu actuel pour le différencier
         />
       )}
     </div>

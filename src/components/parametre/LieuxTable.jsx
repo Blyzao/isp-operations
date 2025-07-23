@@ -10,6 +10,7 @@ import {
   Search,
   Filter,
   Upload,
+  AlertTriangle,
 } from "lucide-react";
 import LieuFormModal from "./LieuFormModal";
 
@@ -152,19 +153,34 @@ function LieuxTable() {
     }
   };
 
-  const filteredLieux = lieux.filter((lieu) => {
-    const matchesSearch = lieu.nomLieu
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      filterStatus === "all" ||
-      (filterStatus === "active" && lieu.active) ||
-      (filterStatus === "inactive" && !lieu.active);
-    const matchesZone = filterZone === "all" || lieu.zone === filterZone;
-    const matchesTypeLieu =
-      filterTypeLieu === "all" || lieu.typeLieu === filterTypeLieu;
-    return matchesSearch && matchesStatus && matchesZone && matchesTypeLieu;
-  });
+
+  const filteredLieux = lieux
+    .filter((lieu) => {
+      const matchesSearch = lieu.nomLieu
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        filterStatus === "all" ||
+        (filterStatus === "active" && lieu.active) ||
+        (filterStatus === "inactive" && !lieu.active);
+      const matchesZone = filterZone === "all" || lieu.zone === filterZone;
+      const matchesTypeLieu =
+        filterTypeLieu === "all" || lieu.typeLieu === filterTypeLieu;
+      return matchesSearch && matchesStatus && matchesZone && matchesTypeLieu;
+    })
+    .sort((a, b) => {
+      // Tri par zone d'abord
+      const zoneA = zones.find(z => z.id === a.zone)?.nomZone || "";
+      const zoneB = zones.find(z => z.id === b.zone)?.nomZone || "";
+      const zoneComparison = zoneA.localeCompare(zoneB);
+      
+      // Si les zones sont identiques, trier par nom de lieu
+      if (zoneComparison === 0) {
+        return a.nomLieu.localeCompare(b.nomLieu);
+      }
+      
+      return zoneComparison;
+    });
 
   if (loading) {
     return (
@@ -296,7 +312,10 @@ function LieuxTable() {
           </div>
           {importError && (
             <div className="mt-3 bg-red-50 border border-red-200 rounded-full p-3">
-              <p className="text-red-600 text-xs font-medium">{importError}</p>
+              <div className="flex items-center space-x-2">
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <p className="text-red-600 text-xs font-medium">{importError}</p>
+              </div>
             </div>
           )}
         </div>

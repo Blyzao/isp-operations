@@ -10,6 +10,7 @@ function LocationPrecisionModal({
   defaultLocation,
   lieuLocation,
   onLocationUpdate,
+  currentLieuId, // ID du lieu en cours pour le différencier visuellement
 }) {
   const [selectedLocation, setSelectedLocation] = useState(defaultLocation || lieuLocation);
   const [viewMode, setViewMode] = useState("map");
@@ -121,7 +122,15 @@ function LocationPrecisionModal({
 
   // Gérer l'affichage des marqueurs selon le zoom
   useEffect(() => {
-    setShowLieuxMarkers(currentZoom >= 14);
+    // Afficher les marqueurs des lieux seulement si le zoom est suffisant
+    // Plus le zoom est élevé, plus on affiche de détails
+    if (currentZoom >= 16) {
+      setShowLieuxMarkers(true); // Zoom élevé : afficher tous les lieux
+    } else if (currentZoom >= 14) {
+      setShowLieuxMarkers(true); // Zoom moyen : afficher les lieux
+    } else {
+      setShowLieuxMarkers(false); // Zoom faible : masquer pour éviter l'encombrement
+    }
   }, [currentZoom]);
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -302,10 +311,25 @@ function LocationPrecisionModal({
                     zoom={18}
                     center={selectedLocation}
                     onClick={handleMapClick}
-                    onZoomChanged={(map) => {
-                      if (map && map.getZoom) {
+                    onZoomChanged={() => {
+                      // Utiliser un timeout pour éviter les appels répétés
+                      setTimeout(() => {
+                        const map = window.google?.maps && document.querySelector('.gm-style');
+                        if (map) {
+                          const mapInstance = window.google.maps.Map && document.querySelector('.gm-style')?.parentNode;
+                          if (mapInstance && mapInstance.__gm && mapInstance.__gm.map) {
+                            const zoom = mapInstance.__gm.map.getZoom();
+                            setCurrentZoom(zoom || 18);
+                          }
+                        }
+                      }, 100);
+                    }}
+                    onLoad={(map) => {
+                      // Définir le zoom initial et écouter les changements
+                      setCurrentZoom(map.getZoom());
+                      map.addListener('zoom_changed', () => {
                         setCurrentZoom(map.getZoom());
-                      }
+                      });
                     }}
                     mapTypeId={viewMode === "satellite" ? "satellite" : "roadmap"}
                     options={{
@@ -334,22 +358,22 @@ function LocationPrecisionModal({
                     )}
 
                     {/* Marqueurs pour tous les lieux (affichés selon le zoom) */}
-                    {showLieuxMarkers && allLieux.map((lieu) => (
-                      <Marker
-                        key={`lieu-${lieu.id}`}
-                        position={lieu.localisation}
-                        onClick={() => setSelectedMarker(lieu)}
-                        icon={{
-                          url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z" fill="#10B981"/>
-                            </svg>
-                          `),
-                          scaledSize: { width: 20, height: 20 },
-                        }}
-                        title={lieu.nomLieu}
-                      />
-                    ))}
+                    {showLieuxMarkers && allLieux.map((lieu) => {
+                      const isCurrentLieu = lieu.id === currentLieuId;
+                      
+                      return (
+                        <Marker
+                          key={`lieu-${lieu.id}`}
+                          position={lieu.localisation}
+                          onClick={() => setSelectedMarker(lieu)}
+                          icon={isCurrentLieu ? 
+                            'https://maps.google.com/mapfiles/ms/icons/red-dot.png' : 
+                            'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                          }
+                          title={`${lieu.nomLieu}${isCurrentLieu ? ' (lieu actuel)' : ''}`}
+                        />
+                      );
+                    })}
 
                     {/* InfoWindow pour afficher les détails d'un lieu */}
                     {selectedMarker && (
@@ -358,17 +382,26 @@ function LocationPrecisionModal({
                         onCloseClick={() => setSelectedMarker(null)}
                       >
                         <div className="p-2 max-w-xs">
-                          <h4 className="font-semibold text-gray-900 text-sm mb-1">
-                            {selectedMarker.nomLieu}
-                          </h4>
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h4 className="font-semibold text-gray-900 text-sm">
+                              {selectedMarker.nomLieu}
+                            </h4>
+                            {selectedMarker.id === currentLieuId && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Lieu actuel
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-gray-600 mb-1">
-                            Zone: {selectedMarker.zoneName}
+                            <span className="font-medium">Zone:</span> {selectedMarker.zoneName}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            Type: {selectedMarker.typeLieu}
+                          <p className="text-xs text-gray-600 mb-1">
+                            <span className="font-medium">Type:</span> {selectedMarker.typeLieu}
                           </p>
-                          <div className="text-xs text-gray-400 mt-2">
-                            {selectedMarker.localisation.lat.toFixed(6)}, {selectedMarker.localisation.lng.toFixed(6)}
+                          <div className="text-xs text-gray-400 mt-2 pt-1 border-t border-gray-200">
+                            <span className="font-medium">Coordonnées:</span><br/>
+                            Lat: {selectedMarker.localisation.lat.toFixed(6)}<br/>
+                            Lng: {selectedMarker.localisation.lng.toFixed(6)}
                           </div>
                         </div>
                       </InfoWindow>
@@ -412,20 +445,31 @@ function LocationPrecisionModal({
                 <div className="text-xs text-gray-500">
                   <p className="mb-1">
                     <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
-                    Position du lieu
+                    Position de référence du lieu
+                  </p>
+                  <p className="mb-1">
+                    <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                    Lieu actuel (plus grand)
                   </p>
                   <p className="mb-1">
                     <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                     Autres lieux (zoom ≥ 14)
                   </p>
                   <p className="mb-1">
-                    <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                    <span className="inline-block w-3 h-3 bg-red-600 rounded-full mr-2"></span>
                     Position précise de l'incident (déplaçable)
                   </p>
-                  <p className="text-blue-600 font-medium">
-                    Cliquez sur la carte ou déplacez le marqueur rouge pour
-                    préciser la localisation
-                  </p>
+                  <div className="mt-2 pt-2 border-t border-gray-200">
+                    <p className="text-blue-600 font-medium text-xs bg-transparent">
+                      • Cliquez sur la carte ou déplacez le marqueur rouge pour préciser la localisation
+                    </p>
+                    <p className="text-gray-500 text-xs mt-1 bg-transparent">
+                      • Zoom recommandé ≥ 14 pour voir tous les lieux
+                    </p>
+                    <p className="text-gray-500 text-xs bg-transparent">
+                      • Cliquez sur un marqueur vert pour voir ses détails
+                    </p>
+                  </div>
                 </div>
                 
                 <button
@@ -476,6 +520,19 @@ function LocationPrecisionModal({
         }
         .animate-scale-in {
           animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        /* Styles pour les labels des marqueurs Google Maps */
+        .marker-label {
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid #e5e7eb;
+          border-radius: 4px;
+          padding: 2px 6px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       `}</style>
     </div>
