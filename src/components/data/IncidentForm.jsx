@@ -33,9 +33,12 @@ import {
   CheckCircle,
   AlertCircle,
   Navigation,
+  Image,
 } from "lucide-react";
 import LocationPrecisionModal from "./LocationPrecisionModal";
 import { sendIncidentEmail } from "../../utils/emailService";
+import ImageUpload from "./ImageUpload";
+import { uploadIncidentImages, validateImages, prepareImageDataForDatabase } from "../../utils/imageService";
 
 function IncidentForm() {
   const { id } = useParams();
@@ -59,6 +62,7 @@ function IncidentForm() {
     primo: "ISP",
     intervenantsISP: [],
     cameras: [],
+    images: [],
     details: "",
     user: "",
     dateEnreg: new Date().toISOString(),
@@ -85,6 +89,11 @@ function IncidentForm() {
   const [newCameraId, setNewCameraId] = useState("");
   const [matriculeValidation, setMatriculeValidation] = useState("");
   const [cameraValidation, setCameraValidation] = useState("");
+
+  // États pour la gestion des images
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -235,6 +244,42 @@ function IncidentForm() {
     }
   }, [formData.date, formData.categorie, isEditMode, isViewMode]);
 
+  // Load incident data for edit/view mode
+  useEffect(() => {
+    const loadIncidentData = async () => {
+      if ((isEditMode || isViewMode) && id) {
+        try {
+          const incidentDoc = await getDoc(doc(db, "incidents", id));
+          if (incidentDoc.exists()) {
+            const data = incidentDoc.data();
+            setFormData(data);
+            
+            // Convertir les images de la base de données en format pour le composant
+            if (data.images && data.images.length > 0) {
+              console.log("📸 Images chargées depuis la DB:", data.images);
+              const imagesPreviews = data.images.map((img, index) => ({
+                id: `existing_${index}`,
+                url: img.url,
+                name: img.name || `Image ${index + 1}`,
+                size: img.size || 0,
+                path: img.path,
+                uploadedAt: img.uploadedAt,
+                isExisting: true
+              }));
+              setSelectedImages(imagesPreviews);
+              console.log("📸 Images converties pour le composant:", imagesPreviews);
+            }
+          }
+        } catch (error) {
+          console.error("Erreur lors du chargement de l'incident:", error);
+          setError("Erreur lors du chargement de l'incident");
+        }
+      }
+    };
+
+    loadIncidentData();
+  }, [id, isEditMode, isViewMode]);
+
   const generateReference = async () => {
     try {
       if (!formData.categorie) return;
@@ -258,6 +303,30 @@ function IncidentForm() {
       setFormData(prev => ({ ...prev, reference }));
     } catch (err) {
       console.error("Erreur lors de la génération de la référence:", err);
+    }
+  };
+
+  const generateReferenceForImages = async (date, categorie) => {
+    try {
+      const dateStr = date.replace(/-/g, '');
+      const categoriePrefix = categorie
+        .substring(0, 3)
+        .toUpperCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      const monthStr = date.substring(0, 7).replace('-', '');
+
+      // Count incidents for this month
+      const incidentsSnapshot = await getDocs(
+        query(collection(db, "incidents"), where("mois", "==", monthStr))
+      );
+      const count = incidentsSnapshot.docs.length + 1;
+      const countStr = count.toString().padStart(3, '0');
+
+      return `${dateStr}-${categoriePrefix}-${countStr}`;
+    } catch (err) {
+      console.error("Erreur lors de la génération de la référence:", err);
+      return `${date.replace(/-/g, '')}-${categorie.substring(0, 3).toUpperCase()}-001`;
     }
   };
 
@@ -328,19 +397,88 @@ function IncidentForm() {
     setFormData(prev => ({ ...prev, precision: newLocation }));
   };
 
+  const handleImagesChange = (images) => {
+    setSelectedImages(images);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
+      // Validation des images
+      if (selectedImages.length > 0) {
+        const imageValidation = validateImages(selectedImages);
+        if (!imageValidation.valid) {
+          setError(imageValidation.errors.join(', '));
+          return;
+        }
+      }
+
       const dateTime = new Date(`${formData.date}T${formData.heure}`);
       const dateLong = dateTime.toISOString();
       const mois = formData.date.substring(0, 7).replace('-', '');
       const annee = formData.date.substring(0, 4);
 
+      let uploadedImages = [];
+
+      // Upload des nouvelles images (pour nouveaux incidents ET modifications)
+      if (selectedImages.length > 0) {
+        // Séparer les nouvelles images des images existantes
+        const newImages = selectedImages.filter(img => !img.isExisting);
+        const existingImages = selectedImages.filter(img => img.isExisting);
+        
+        console.log("📸 Images sélectionnées:", selectedImages);
+        console.log("📸 Nouvelles images à uploader:", newImages);
+        console.log("📸 Images existantes conservées:", existingImages);
+        
+        // Préparer les images existantes pour la base de données
+        uploadedImages = existingImages.map(img => ({
+          url: img.url,
+          path: img.path,
+          name: img.name,
+          size: img.size,
+          uploadedAt: img.uploadedAt || new Date().toISOString()
+        }));
+        
+        if (newImages.length > 0) {
+          // Vérifier que l'utilisateur est authentifié
+          if (!user) {
+            setError("Utilisateur non authentifié. Veuillez vous reconnecter.");
+            return;
+          }
+          
+          setUploadingImages(true);
+          
+          // Générer une référence pour nommer les images
+          const tempReference = isEditMode 
+            ? formData.reference 
+            : await generateReferenceForImages(formData.date, formData.categorie);
+          
+          const uploadResult = await uploadIncidentImages(
+            newImages, // Uploader seulement les nouvelles images
+            tempReference,
+            (current, total) => {
+              setUploadProgress(Math.round((current / total) * 100));
+            }
+          );
+
+          if (!uploadResult.success) {
+            setError(`Erreur lors de l'upload des images: ${uploadResult.failed[0]?.error || 'Erreur inconnue'}`);
+            return;
+          }
+
+          // Combiner les images existantes avec les nouvelles uploadées
+          const newUploadedImages = prepareImageDataForDatabase(uploadResult);
+          uploadedImages = [...uploadedImages, ...newUploadedImages];
+          setUploadingImages(false);
+        }
+      }
+
       const incidentData = {
         ...formData,
+        images: uploadedImages,
         dateLong,
         mois,
         annee,
@@ -375,6 +513,8 @@ function IncidentForm() {
       setError("Erreur lors de l'enregistrement: " + err.message);
     } finally {
       setLoading(false);
+      setUploadingImages(false);
+      setUploadProgress(0);
     }
   };
 
@@ -414,7 +554,7 @@ function IncidentForm() {
             </div>
             <button
               onClick={() => navigate("/operations/incidents")}
-              className="flex items-center space-x-2 px-4 py-2 bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent rounded-full transition-all duration-200 shadow-sm font-medium"
+              className="flex items-center space-x-2 px-4 py-2 bg-black text-white hover:bg-white hover:text-black hover:border-black border border-transparent rounded-full transition-all duration-200 shadow-sm font-medium cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Retour à la liste des incidents</span>
@@ -554,7 +694,7 @@ function IncidentForm() {
                       <button
                         type="button"
                         onClick={() => setLocationModalOpen(true)}
-                        className="px-3 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-200 font-medium text-xs"
+                        className="px-3 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-200 font-medium text-xs cursor-pointer"
                       >
                         Préciser la position
                       </button>
@@ -703,7 +843,7 @@ function IncidentForm() {
                   <button
                     type="button"
                     onClick={handleMatriculeAdd}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2 font-medium text-sm"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2 font-medium text-sm cursor-pointer disabled:cursor-not-allowed"
                     disabled={isViewMode}
                   >
                     <Plus className="w-4 h-4" />
@@ -730,7 +870,7 @@ function IncidentForm() {
                           <button
                             type="button"
                             onClick={() => handleMatriculeRemove(personnelId)}
-                            className="text-red-500 hover:text-red-700 transition-colors p-1 hover:bg-gray-100 rounded-full"
+                            className="text-red-500 hover:text-red-700 transition-colors p-1 hover:bg-gray-100 rounded-full cursor-pointer"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -762,7 +902,7 @@ function IncidentForm() {
                   <button
                     type="button"
                     onClick={handleCameraAdd}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 font-medium text-sm"
+                    className="px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2 font-medium text-sm cursor-pointer disabled:cursor-not-allowed"
                     disabled={isViewMode}
                   >
                     <Plus className="w-4 h-4" />
@@ -789,7 +929,7 @@ function IncidentForm() {
                           <button
                             type="button"
                             onClick={() => handleCameraRemove(cameraId)}
-                            className="text-red-500 hover:text-red-700 transition-colors p-1 hover:bg-gray-100 rounded-full"
+                            className="text-red-500 hover:text-red-700 transition-colors p-1 hover:bg-gray-100 rounded-full cursor-pointer"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -798,6 +938,42 @@ function IncidentForm() {
                     ) : null;
                   })}
                 </div>
+              </div>
+
+              {/* Images */}
+              <div className="space-y-4">
+                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
+                  <div className="p-1 bg-gray-100 rounded">
+                    <Image className="w-4 h-4 text-gray-600" />
+                  </div>
+                  <span>Images de l'incident</span>
+                  <span className="text-xs text-gray-500">(optionnel - max 3 images)</span>
+                </label>
+                
+                {uploadingImages && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                      <span className="text-blue-700 text-sm font-medium">
+                        Upload en cours... ({uploadProgress}%)
+                      </span>
+                    </div>
+                    <div className="mt-2 bg-blue-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                <ImageUpload
+                  images={selectedImages}
+                  onImagesChange={handleImagesChange}
+                  disabled={isViewMode || uploadingImages}
+                  maxImages={3}
+                  maxSizeBytes={5 * 1024 * 1024} // 5MB
+                />
               </div>
 
               {/* Détails */}
@@ -835,14 +1011,14 @@ function IncidentForm() {
                   <button
                     type="button"
                     onClick={() => navigate("/operations/incidents")}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-all duration-200 font-medium border border-gray-300 text-sm"
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-all duration-200 font-medium border border-gray-300 text-sm cursor-pointer"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium text-sm"
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium text-sm cursor-pointer"
                   >
                     {loading ? (
                       <>

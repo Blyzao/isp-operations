@@ -185,6 +185,8 @@ function IncidentsTable() {
 
   const handlePrint = async (incident) => {
     try {
+      console.log("🖨️ Génération PDF pour incident:", incident);
+      console.log("📸 Images dans l'incident:", incident.images);
       await generateIncidentPDF(incident);
     } catch (error) {
       console.error("Erreur lors de la génération du PDF:", error);

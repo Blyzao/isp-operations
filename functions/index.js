@@ -16,15 +16,13 @@ const EMAIL_CONFIG = {
   support: "support@nexion.com",
 };
 
-// Configuration CORS pour la production et développement
+// Configuration CORS pour permettre développement et production
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'development' ? [
-    "http://localhost:5173",          // Développement local seulement
-    "http://localhost:3000",          // Alternative dev seulement
+  origin: [
+    "http://localhost:5173",          // Développement local Vite
+    "http://localhost:3000",          // Développement local alternatif
+    "http://127.0.0.1:5173",          // Développement local IP
     "https://isp-operations.web.app",   // Firebase Hosting
-    "https://isp-operations.firebaseapp.com", // Firebase Hosting alternative
-  ] : [
-    "https://isp-operations.web.app",   // Firebase Hosting (production)
     "https://isp-operations.firebaseapp.com", // Firebase Hosting alternative
     // Ajoutez ici votre domaine de production personnalisé si vous en avez un
     // "https://votre-domaine.com"
@@ -1081,6 +1079,25 @@ exports.sendIncidentNotification = functions.https.onRequest(async (req, res) =>
       ? incidentData.cameras.join(', ')
       : "PAS DE CAMERA";
 
+    // Construire la section des images
+    const imagesHtml = incidentData.images && incidentData.images.length > 0 
+      ? `
+      <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e3a8a;">
+        <h3 style="color: #1e3a8a; margin-bottom: 16px; font-size: 18px;">📸 Images de l'incident</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+          ${incidentData.images.map((img, index) => `
+            <div style="text-align: center;">
+              <img src="${img.url}" alt="Image ${index + 1}" style="max-width: 100%; height: auto; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+              <p style="margin: 5px 0; font-size: 12px; color: #666;">Image ${index + 1}</p>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      ` 
+      : '';
+    
+    console.log("📸 Images dans l'incident Cloud Function:", incidentData.images);
+
     const content = `
 <!DOCTYPE html>
 <html lang="fr">
@@ -1157,6 +1174,7 @@ exports.sendIncidentNotification = functions.https.onRequest(async (req, res) =>
       </div>
       ` : ''}
       
+      ${imagesHtml}
         
         <div style="background: #f8fafc; padding: 15px; border-radius: 6px; margin-top: 20px; border-left: 3px solid #0284c7;">
             <div style="color: #1f2937; font-weight: 600; margin-bottom: 5px;">

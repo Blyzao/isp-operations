@@ -23,8 +23,11 @@ import TypesIncidentTable from "./components/parametre/TypesIncidentTable.jsx";
 import TypesCargaisonTable from "./components/parametre/TypesCargaisonTable.jsx";
 import TypesProduitExportationTable from "./components/parametre/TypesProduitExportationTable.jsx";
 import TypesProduitAvitaillementTable from "./components/parametre/TypesProduitAvitaillementTable.jsx";
+import EntrepriseTable from "./components/parametre/EntrepriseTable.jsx";
 import IncidentsTable from "./components/data/IncidentsTable.jsx";
 import IncidentForm from "./components/data/IncidentForm.jsx";
+import DocumentsSaisisTable from "./components/data/DocumentsSaisisTable.jsx";
+import CargaisonTable from "./components/data/CargaisonTable.jsx";
 
 const ProtectedRoute = ({ children, user, requiredRoles }) => {
   const navigate = useNavigate();
@@ -312,6 +315,16 @@ function App() {
         }
       />
       <Route
+        path="/parametres/entreprise"
+        element={
+          <ProtectedRoute user={user} requiredRoles={["admin", "superviseur"]}>
+            <Layout>
+              <EntrepriseTable />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/operations/incidents"
         element={
           <ProtectedRoute
@@ -359,6 +372,32 @@ function App() {
           >
             <Layout>
               <IncidentForm />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/operations/titres-acces-saisis"
+        element={
+          <ProtectedRoute
+            user={user}
+            requiredRoles={["admin", "superviseur", "user"]}
+          >
+            <Layout>
+              <DocumentsSaisisTable />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/operations/cargaisons-saisies"
+        element={
+          <ProtectedRoute
+            user={user}
+            requiredRoles={["admin", "superviseur", "user"]}
+          >
+            <Layout>
+              <CargaisonTable />
             </Layout>
           </ProtectedRoute>
         }

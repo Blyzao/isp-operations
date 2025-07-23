@@ -389,6 +389,13 @@ function Navbar({ user }) {
                               <UsersIcon className="w-4 h-4 mr-3 text-purple-500 group-hover:scale-110 transition-transform duration-200" />
                               <span className="font-medium">Équipe</span>
                             </Link>
+                            <Link
+                              to="/parametres/entreprise"
+                              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-blue-100/80 hover:text-blue-700 transition-all duration-200 text-sm rounded-full group backdrop-blur-sm"
+                            >
+                              <Building2 className="w-4 h-4 mr-3 text-indigo-500 group-hover:scale-110 transition-transform duration-200" />
+                              <span className="font-medium">Entreprise</span>
+                            </Link>
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center mb-3 pb-2 border-b border-gray-100">

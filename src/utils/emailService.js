@@ -3,7 +3,7 @@ import { collection, getDocs, doc, getDoc, query, where } from "firebase/firesto
 
 export const sendIncidentEmail = async (incidentData) => {
   // Test : Tenter la Cloud Function directement pour vérifier CORS
-  const testCloudFunction = true; // Activé pour tester après déploiement
+  const testCloudFunction = true; // Réactivé après vérification du fallback
   
   if (testCloudFunction === false) {
     console.log("🔧 Mode test désactivé, utilisation du fallback...");
@@ -206,6 +206,9 @@ const getEmailRecipients = (userDocs, emailData) => {
 };
 
 const buildEmailContent = (emailData) => {
+  console.log("📧 Construction de l'email avec données:", emailData);
+  console.log("📸 Images dans emailData:", emailData.images);
+  
   const subject = `${emailData.typeIncident} ${emailData.lieu}`;
   
   // Construire la liste des intervenants ISP
@@ -217,6 +220,11 @@ const buildEmailContent = (emailData) => {
   const camerasText = emailData.cameras && emailData.cameras.length > 0 
     ? emailData.cameras.join(', ') // Joindre avec des virgules et espaces
     : "PAS DE CAMERA";
+
+  // Construire la liste des images
+  const imagesText = emailData.images && emailData.images.length > 0 
+    ? emailData.images.map((img, index) => `Image ${index + 1}: ${img.url}`).join('\n')
+    : "AUCUNE IMAGE";
   
   const content = `
 REFERENCE : ${emailData.reference}
@@ -245,13 +253,70 @@ ${emailData.quantite && emailData.quantite !== "" ? `QUANTITE : ${emailData.quan
 
 ${emailData.details || "Aucun détail fourni"}
 
+${emailData.images && emailData.images.length > 0 ? `
+IMAGES DE L'INCIDENT :
+
+${imagesText}
+` : ''}
+
 ${emailData.user?.nom || "Utilisateur"}
 ${emailData.user?.fonction || "Fonction non spécifiée"}
   `.trim();
   
+  // Version HTML avec images intégrées
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h2 style="color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px;">
+        📋 RAPPORT D'INCIDENT
+      </h2>
+      
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">RÉFÉRENCE :</td><td style="padding: 8px;">${emailData.reference}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">DATE :</td><td style="padding: 8px;">${emailData.date}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">HEURE :</td><td style="padding: 8px;">${emailData.heure}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">ZONE :</td><td style="padding: 8px;">${emailData.zone}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">LIEU :</td><td style="padding: 8px;">${emailData.lieu}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">CATÉGORIE :</td><td style="padding: 8px;">${emailData.categorie}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">TYPE D'INCIDENT :</td><td style="padding: 8px;">${emailData.typeIncident}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">NIVEAU D'IMPACT :</td><td style="padding: 8px;">${emailData.niveauImpact}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">PRIMO INTERVENANT :</td><td style="padding: 8px;">${emailData.primo}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">INTERVENANTS ISP :</td><td style="padding: 8px;">${intervenantsText}</td></tr>
+        <tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">CAMÉRAS :</td><td style="padding: 8px;">${camerasText}</td></tr>
+        ${emailData.quantite && emailData.quantite !== "" ? `<tr><td style="padding: 8px; font-weight: bold; background-color: #f8f9fa;">QUANTITÉ :</td><td style="padding: 8px;">${emailData.quantite}</td></tr>` : ''}
+      </table>
+      
+      <div style="margin-bottom: 20px;">
+        <h3 style="color: #333; margin-bottom: 10px;">📝 DÉTAILS DE L'INCIDENT :</h3>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; white-space: pre-wrap;">
+${emailData.details || "Aucun détail fourni"}
+        </div>
+      </div>
+      
+      ${emailData.images && emailData.images.length > 0 ? `
+      <div style="margin-bottom: 20px;">
+        <h3 style="color: #333; margin-bottom: 15px;">📸 IMAGES DE L'INCIDENT :</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+          ${emailData.images.map((img, index) => `
+            <div style="text-align: center;">
+              <img src="${img.url}" alt="Image ${index + 1}" style="max-width: 100%; height: auto; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+              <p style="margin: 5px 0; font-size: 12px; color: #666;">Image ${index + 1}</p>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      ` : ''}
+      
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px;">
+        <p><strong>Rapporté par :</strong> ${emailData.user?.nom || "Utilisateur"}</p>
+        <p><strong>Fonction :</strong> ${emailData.user?.fonction || "Fonction non spécifiée"}</p>
+      </div>
+    </div>
+  `;
+
   return {
     subject,
-    content
+    content,
+    htmlContent
   };
 };
 
