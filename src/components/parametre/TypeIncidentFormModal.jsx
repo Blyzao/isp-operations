@@ -188,6 +188,7 @@ function TypeIncidentFormModal({
                 >
                   <option value="Sûreté">Sûreté</option>
                   <option value="Sécurité">Sécurité</option>
+                  <option value="Informations">Informations</option>
                 </select>
               </div>
 

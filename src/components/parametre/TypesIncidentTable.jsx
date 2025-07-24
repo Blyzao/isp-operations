@@ -21,6 +21,19 @@ function TypesIncidentTable() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTypeIncidentId, setEditTypeIncidentId] = useState(null);
 
+  const getCategorieColor = (categorie) => {
+    switch (categorie) {
+      case "Sécurité":
+        return "bg-red-100 text-red-800";
+      case "Sûreté":
+        return "bg-blue-100 text-blue-800";
+      case "Informations":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   const fetchTypesIncident = async () => {
     try {
       setLoading(true);
@@ -143,6 +156,8 @@ function TypesIncidentTable() {
                 <option value="all">Toutes catégories</option>
                 <option value="Sûreté">Sûreté</option>
                 <option value="Sécurité">Sécurité</option>
+                <option value="Informations">Informations</option>
+                <option value="Sécurité">Sécurité</option>
               </select>
             </div>
             <div className="relative">
@@ -248,8 +263,12 @@ function TypesIncidentTable() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
-                        {typeIncident.categorie}
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          getCategorieColor(typeIncident.categorie)
+                        }`}>
+                          {typeIncident.categorie}
+                        </span>
                       </td>
                       <td className="py-3 px-4">
                         <span

@@ -533,6 +533,19 @@ function IncidentForm() {
     }
   };
 
+  const getCategorieColor = (categorie) => {
+    switch (categorie) {
+      case "Sécurité":
+        return "bg-red-100 text-red-800";
+      case "Sûreté":
+        return "bg-blue-100 text-blue-800";
+      case "Informations":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4">
@@ -722,6 +735,7 @@ function IncidentForm() {
                   >
                     <option value="Sécurité">Sécurité</option>
                     <option value="Sûreté">Sûreté</option>
+                    <option value="Informations">Informations</option>
                   </select>
                 </div>
 

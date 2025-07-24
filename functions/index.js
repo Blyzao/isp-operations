@@ -1221,3 +1221,474 @@ exports.sendIncidentNotification = functions.https.onRequest(async (req, res) =>
   }
   }); // Fermeture du handler CORS
 });
+
+// =====================================================
+// ENDPOINTS API POUR POWER QUERY EXCEL
+// =====================================================
+
+// Clé API pour sécuriser les endpoints (générez une clé sécurisée en production)
+const API_KEY = "isp-operations-powerquery-key-2024-secure";
+
+// Alternative : Username/Password pour Power Query
+const API_USERNAME = "powerquery-user";
+const API_PASSWORD = "isp-operations-2024-secure";
+
+// Middleware d'authentification flexible (clé API, basic auth, ou paramètres)
+const authenticateRequest = (req, res, next) => {
+  // Option 1: Clé API dans l'en-tête ou paramètre
+  const apiKey = req.headers['x-api-key'] || req.query.api_key;
+  if (apiKey === API_KEY) {
+    return next();
+  }
+  
+  // Option 2: Authentication basique (pour Power Query)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Basic ')) {
+    const base64Credentials = authHeader.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+    const [username, password] = credentials.split(':');
+    
+    if (username === API_USERNAME && password === API_PASSWORD) {
+      return next();
+    }
+  }
+  
+  // Option 3: Paramètres username/password dans l'URL
+  const urlUsername = req.query.username;
+  const urlPassword = req.query.password;
+  if (urlUsername === API_USERNAME && urlPassword === API_PASSWORD) {
+    return next();
+  }
+  
+  // Aucune authentification valide trouvée
+  return res.status(401).json({
+    error: "Authentification requise",
+    code: "UNAUTHORIZED",
+    message: "Utilisez une clé API, l'authentification basique, ou les paramètres username/password"
+  });
+};
+
+// Helper function pour enrichir les données avec les noms des entités liées
+const enrichDataWithRelatedData = async (data, collections) => {
+  const enrichedData = [];
+  
+  for (const item of data) {
+    const enrichedItem = { ...item };
+    
+    // Enrichir avec les noms des zones
+    if (item.zone && collections.zones) {
+      const zone = collections.zones.find(z => z.id === item.zone);
+      enrichedItem.zoneName = zone ? zone.nomZone : "N/A";
+    }
+    
+    // Enrichir avec les noms des lieux
+    if (item.lieu && collections.lieux) {
+      const lieu = collections.lieux.find(l => l.id === item.lieu);
+      enrichedItem.lieuName = lieu ? lieu.nomLieu : "N/A";
+    }
+    
+    // Enrichir avec les noms des types d'incidents
+    if (item.typeIncident && collections.typeIncidents) {
+      const type = collections.typeIncidents.find(t => t.id === item.typeIncident);
+      enrichedItem.typeIncidentName = type ? type.nomIncident : "N/A";
+    }
+    
+    // Enrichir avec les noms des utilisateurs
+    if (item.user && collections.users) {
+      const user = collections.users.find(u => u.id === item.user);
+      enrichedItem.userName = user ? user.nom : "N/A";
+    }
+    
+    // Enrichir avec les noms des équipes
+    if (item.equipe && collections.equipes) {
+      const equipe = collections.equipes.find(e => e.id === item.equipe);
+      enrichedItem.equipeName = equipe ? equipe.nomEquipe : "N/A";
+    }
+    
+    // Enrichir avec les noms des types de cargaison
+    if (item.typeCargaison && collections.typesCargaison) {
+      const type = collections.typesCargaison.find(t => t.id === item.typeCargaison);
+      enrichedItem.typeCargaisonName = type ? type.nomCargaison : "N/A";
+    }
+    
+    // Enrichir avec les noms des types de document
+    if (item.typeDocument && collections.typesDocument) {
+      const type = collections.typesDocument.find(t => t.id === item.typeDocument);
+      enrichedItem.typeDocumentName = type ? type.nomDocument : "N/A";
+    }
+    
+    // Enrichir avec les noms des usagers
+    if (item.TypeUsager && collections.usagers) {
+      const usager = collections.usagers.find(u => u.id === item.TypeUsager);
+      enrichedItem.usagerName = usager ? usager.nomUsagers : "N/A";
+    }
+    
+    // Enrichir avec les noms des motifs de saisie
+    if (item.motifSaisie && collections.motifsSaisie) {
+      const motif = collections.motifsSaisie.find(m => m.id === item.motifSaisie);
+      enrichedItem.motifSaisieName = motif ? motif.nomMotif : "N/A";
+    }
+    
+    // Enrichir avec les noms des personnels pour les intervenants
+    if (item.intervenantsISP && collections.personnels) {
+      enrichedItem.intervenantsISPNames = item.intervenantsISP.map(id => {
+        const personnel = collections.personnels.find(p => p.id === id);
+        return personnel ? `${personnel.nomPrenom} (${personnel.matricule})` : id;
+      }).join("; ");
+    } else if (item.intervenants && collections.personnels) {
+      enrichedItem.intervenantsNames = item.intervenants.map(id => {
+        const personnel = collections.personnels.find(p => p.id === id);
+        return personnel ? `${personnel.nomPrenom} (${personnel.matricule})` : id;
+      }).join("; ");
+    }
+    
+    // Enrichir avec les IDs des caméras
+    if (item.cameras && collections.cameras) {
+      enrichedItem.camerasText = item.cameras.map(id => {
+        const camera = collections.cameras.find(c => c.id === id);
+        return camera ? camera.idCamera : id;
+      }).join(", ");
+    }
+    
+    enrichedData.push(enrichedItem);
+  }
+  
+  return enrichedData;
+};
+
+// Helper function pour charger toutes les collections nécessaires
+const loadAllCollections = async () => {
+  try {
+    const [
+      zonesSnapshot,
+      lieuxSnapshot,
+      typeIncidentsSnapshot,
+      usersSnapshot,
+      equipesSnapshot,
+      typesCargaisonSnapshot,
+      typesDocumentSnapshot,
+      usagersSnapshot,
+      motifsSaisieSnapshot,
+      personnelsSnapshot,
+      camerasSnapshot
+    ] = await Promise.all([
+      admin.firestore().collection("zones").get(),
+      admin.firestore().collection("lieux").get(),
+      admin.firestore().collection("typeIncident").get(),
+      admin.firestore().collection("users").get(),
+      admin.firestore().collection("equipes").get(),
+      admin.firestore().collection("typeCargaison").get(),
+      admin.firestore().collection("typeDocument").get(),
+      admin.firestore().collection("usagers").get(),
+      admin.firestore().collection("motifSaisie").get(),
+      admin.firestore().collection("personnels").get(),
+      admin.firestore().collection("cameras").get()
+    ]);
+
+    return {
+      zones: zonesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      lieux: lieuxSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      typeIncidents: typeIncidentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      users: usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      equipes: equipesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      typesCargaison: typesCargaisonSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      typesDocument: typesDocumentSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      usagers: usagersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      motifsSaisie: motifsSaisieSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      personnels: personnelsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      cameras: camerasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    };
+  } catch (error) {
+    console.error("Erreur lors du chargement des collections:", error);
+    throw error;
+  }
+};
+
+// ENDPOINT: API pour les incidents
+exports.getIncidentsData = functions.https.onRequest(async (req, res) => {
+  return corsHandler(req, res, async () => {
+    console.log("🔵 getIncidentsData appelée");
+    
+    // Vérifier l'authentification
+    let isAuthenticated = false;
+    
+    // Option 1: Clé API dans l'en-tête ou paramètre
+    const apiKey = req.headers['x-api-key'] || req.query.api_key;
+    if (apiKey === API_KEY) {
+      isAuthenticated = true;
+    }
+    
+    // Option 2: Authentication basique (pour Power Query)
+    if (!isAuthenticated) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Basic ')) {
+        const base64Credentials = authHeader.split(' ')[1];
+        const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+        const [username, password] = credentials.split(':');
+        
+        if (username === API_USERNAME && password === API_PASSWORD) {
+          isAuthenticated = true;
+        }
+      }
+    }
+    
+    // Option 3: Paramètres username/password dans l'URL
+    if (!isAuthenticated) {
+      const urlUsername = req.query.username;
+      const urlPassword = req.query.password;
+      if (urlUsername === API_USERNAME && urlPassword === API_PASSWORD) {
+        isAuthenticated = true;
+      }
+    }
+    
+    if (!isAuthenticated) {
+      return res.status(401).json({
+        error: "Authentification requise",
+        code: "UNAUTHORIZED",
+        message: "Utilisez une clé API, l'authentification basique, ou les paramètres username/password"
+      });
+    }
+    
+    try {
+      // Charger toutes les collections nécessaires
+      const collections = await loadAllCollections();
+      
+      // Récupérer les incidents
+      const incidentsSnapshot = await admin.firestore()
+        .collection("incidents")
+        .orderBy("dateLong", "desc")
+        .get();
+      
+      const incidents = incidentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Enrichir les données
+      const enrichedIncidents = await enrichDataWithRelatedData(incidents, collections);
+      
+      // Transformer au format Excel
+      const excelData = enrichedIncidents.map(incident => ({
+        'Référence': incident.reference || "",
+        'Date': incident.date ? new Date(incident.date).toLocaleDateString("fr-FR") : "",
+        'Heure': incident.heure || "",
+        'Zone': incident.zoneName || "N/A",
+        'Lieu': incident.lieuName || "N/A",
+        'Catégorie': incident.categorie || "",
+        'Type d\'incident': incident.typeIncidentName || "N/A",
+        'Niveau Impact': incident.niveauImpact || "",
+        'Primo Intervenant': incident.primo || "",
+        'Intervenants ISP': incident.intervenantsISPNames || "Aucun intervenant ISP",
+        'Caméras': incident.camerasText || "PAS DE CAMERA",
+        'Détails de l\'incident': incident.details || "",
+        'Rédigé par': incident.userName || "N/A",
+        'Date enregistrement': incident.dateEnreg ? new Date(incident.dateEnreg).toLocaleDateString("fr-FR") + " " + new Date(incident.dateEnreg).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' }) : ""
+      }));
+      
+      console.log(`✅ ${excelData.length} incidents exportés`);
+      
+      res.status(200).json({
+        success: true,
+        data: excelData,
+        count: excelData.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("❌ Erreur lors de l'export des incidents:", error);
+      res.status(500).json({
+        error: "Erreur lors de l'export des incidents",
+        code: "EXPORT_ERROR",
+        details: error.message,
+      });
+    }
+  });
+});
+
+// ENDPOINT: API pour les cargaisons
+exports.getCargaisonsData = functions.https.onRequest(async (req, res) => {
+  return corsHandler(req, res, async () => {
+    console.log("🔵 getCargaisonsData appelée");
+    
+    // Vérifier l'authentification
+    let isAuthenticated = false;
+    
+    // Option 1: Clé API dans l'en-tête ou paramètre
+    const apiKey = req.headers['x-api-key'] || req.query.api_key;
+    if (apiKey === API_KEY) {
+      isAuthenticated = true;
+    }
+    
+    // Option 2: Authentication basique (pour Power Query)
+    if (!isAuthenticated) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Basic ')) {
+        const base64Credentials = authHeader.split(' ')[1];
+        const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+        const [username, password] = credentials.split(':');
+        
+        if (username === API_USERNAME && password === API_PASSWORD) {
+          isAuthenticated = true;
+        }
+      }
+    }
+    
+    // Option 3: Paramètres username/password dans l'URL
+    if (!isAuthenticated) {
+      const urlUsername = req.query.username;
+      const urlPassword = req.query.password;
+      if (urlUsername === API_USERNAME && urlPassword === API_PASSWORD) {
+        isAuthenticated = true;
+      }
+    }
+    
+    if (!isAuthenticated) {
+      return res.status(401).json({
+        error: "Authentification requise",
+        code: "UNAUTHORIZED",
+        message: "Utilisez une clé API, l'authentification basique, ou les paramètres username/password"
+      });
+    }
+    
+    try {
+      // Charger toutes les collections nécessaires
+      const collections = await loadAllCollections();
+      
+      // Récupérer les cargaisons
+      const cargaisonsSnapshot = await admin.firestore()
+        .collection("saisieCargaison")
+        .orderBy("dateLong", "desc")
+        .get();
+      
+      const cargaisons = cargaisonsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Enrichir les données
+      const enrichedCargaisons = await enrichDataWithRelatedData(cargaisons, collections);
+      
+      // Transformer au format Excel
+      const excelData = enrichedCargaisons.map((cargaison, index) => ({
+        'N°': index + 1,
+        'Date': cargaison.date || "",
+        'Heure': cargaison.heure || "",
+        'Vacation': cargaison.vacation || "",
+        'Zone': cargaison.zoneName || "N/A",
+        'Lieu': cargaison.lieuName || "N/A",
+        'Équipe': cargaison.equipeName || "N/A",
+        'Type Cargaison': cargaison.typeCargaisonName || "N/A",
+        'Nombre Cargaison': cargaison.nombreCargaison || "",
+        'Masse Cargaison (kg)': cargaison.masseCargaison || "",
+        'Entreprise': cargaison.entreprise || "",
+        'Intervenants': cargaison.intervenantsNames || "Aucun"
+      }));
+      
+      console.log(`✅ ${excelData.length} cargaisons exportées`);
+      
+      res.status(200).json({
+        success: true,
+        data: excelData,
+        count: excelData.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("❌ Erreur lors de l'export des cargaisons:", error);
+      res.status(500).json({
+        error: "Erreur lors de l'export des cargaisons",
+        code: "EXPORT_ERROR",
+        details: error.message,
+      });
+    }
+  });
+});
+
+// ENDPOINT: API pour les documents saisis
+exports.getDocumentsData = functions.https.onRequest(async (req, res) => {
+  return corsHandler(req, res, async () => {
+    console.log("🔵 getDocumentsData appelée");
+    
+    // Vérifier l'authentification
+    let isAuthenticated = false;
+    
+    // Option 1: Clé API dans l'en-tête ou paramètre
+    const apiKey = req.headers['x-api-key'] || req.query.api_key;
+    if (apiKey === API_KEY) {
+      isAuthenticated = true;
+    }
+    
+    // Option 2: Authentication basique (pour Power Query)
+    if (!isAuthenticated) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Basic ')) {
+        const base64Credentials = authHeader.split(' ')[1];
+        const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+        const [username, password] = credentials.split(':');
+        
+        if (username === API_USERNAME && password === API_PASSWORD) {
+          isAuthenticated = true;
+        }
+      }
+    }
+    
+    // Option 3: Paramètres username/password dans l'URL
+    if (!isAuthenticated) {
+      const urlUsername = req.query.username;
+      const urlPassword = req.query.password;
+      if (urlUsername === API_USERNAME && urlPassword === API_PASSWORD) {
+        isAuthenticated = true;
+      }
+    }
+    
+    if (!isAuthenticated) {
+      return res.status(401).json({
+        error: "Authentification requise",
+        code: "UNAUTHORIZED",
+        message: "Utilisez une clé API, l'authentification basique, ou les paramètres username/password"
+      });
+    }
+    
+    try {
+      // Charger toutes les collections nécessaires
+      const collections = await loadAllCollections();
+      
+      // Récupérer les documents
+      const documentsSnapshot = await admin.firestore()
+        .collection("documentsSaisis")
+        .orderBy("dateLong", "desc")
+        .get();
+      
+      const documents = documentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Enrichir les données
+      const enrichedDocuments = await enrichDataWithRelatedData(documents, collections);
+      
+      // Transformer au format Excel
+      const excelData = enrichedDocuments.map((document, index) => ({
+        "N°": index + 1,
+        "Date": document.date || "",
+        "Heure": document.heure || "",
+        "Référence": document.reference || "",
+        "Vacation": document.vacation || "",
+        "Zone": document.zoneName || "N/A",
+        "Lieu": document.lieuName || "N/A",
+        "Équipe": document.equipeName || "N/A",
+        "Usager": document.usagerName || "N/A",
+        "Type Document": document.typeDocumentName || "N/A",
+        "Motif Saisie": document.motifSaisieName || "N/A",
+        "Entreprise": document.Entreprise || "",
+        "Nom Usager": document.nomUsager || "",
+        "Intervenants": document.intervenantsNames || "Aucun intervenant"
+      }));
+      
+      console.log(`✅ ${excelData.length} documents exportés`);
+      
+      res.status(200).json({
+        success: true,
+        data: excelData,
+        count: excelData.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("❌ Erreur lors de l'export des documents:", error);
+      res.status(500).json({
+        error: "Erreur lors de l'export des documents",
+        code: "EXPORT_ERROR",
+        details: error.message,
+      });
+    }
+  });
+});

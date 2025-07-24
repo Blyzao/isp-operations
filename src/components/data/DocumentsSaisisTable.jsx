@@ -213,6 +213,23 @@ function DocumentsSaisisTable() {
     return zone ? zone.nomZone : zoneId;
   };
 
+  const getZoneColor = (zoneName) => {
+    switch (zoneName) {
+      case "Zone 2":
+        return "bg-blue-100 text-blue-800";
+      case "Zone 3":
+        return "bg-green-100 text-green-800";
+      case "SOC":
+        return "bg-purple-100 text-purple-800";
+      case "Nautique":
+        return "bg-cyan-100 text-cyan-800";
+      case "IPC":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   const getLieuName = (lieuId) => {
     const lieu = lieux.find(l => l.id === lieuId);
     return lieu ? lieu.nomLieu : lieuId;
@@ -544,7 +561,18 @@ function DocumentsSaisisTable() {
                           {document.vacation}
                         </span>
                       </td>
-                      <td className="py-2 px-2 text-xs">{truncateText(getZoneName(document.zone))}</td>
+                      <td className="py-2 px-2 text-xs">
+                        {(() => {
+                          const zoneName = getZoneName(document.zone);
+                          return (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              getZoneColor(zoneName)
+                            }`}>
+                              {truncateText(zoneName)}
+                            </span>
+                          );
+                        })()} 
+                      </td>
                       <td className="py-2 px-2 text-xs">{truncateText(getLieuName(document.lieu))}</td>
                       <td className="py-2 px-2 text-xs">{truncateText(getUsagerName(document.TypeUsager))}</td>
                       <td className="py-2 px-2 text-xs">{truncateText(getTypeDocumentName(document.typeDocument))}</td>

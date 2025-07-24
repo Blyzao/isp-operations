@@ -140,6 +140,23 @@ function CargaisonTable() {
     return zone ? zone.nomZone : "N/A";
   };
 
+  const getZoneColor = (zoneName) => {
+    switch (zoneName) {
+      case "Zone 2":
+        return "bg-blue-100 text-blue-800";
+      case "Zone 3":
+        return "bg-green-100 text-green-800";
+      case "SOC":
+        return "bg-purple-100 text-purple-800";
+      case "Nautique":
+        return "bg-cyan-100 text-cyan-800";
+      case "IPC":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   const getLieuName = (lieuId) => {
     const lieu = lieux.find(l => l.id === lieuId);
     return lieu ? lieu.nomLieu : "N/A";
@@ -391,7 +408,7 @@ function CargaisonTable() {
                     <tr key={cargaison.id} className="hover:bg-gray-50 transition-colors duration-150">
                       <td className="py-3 px-4">
                         <div className="text-sm text-gray-600">
-                          {cargaison.date || "N/A"}
+                          {cargaison.date ? new Date(cargaison.date).toLocaleDateString("fr-FR", { day: '2-digit', month: '2-digit', year: 'numeric' }) : "N/A"}
                         </div>
                       </td>
                       <td className="py-3 px-4">
@@ -400,14 +417,31 @@ function CargaisonTable() {
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600 capitalize">
-                          {cargaison.vacation || "N/A"}
-                        </div>
+                        {cargaison.vacation ? (
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            cargaison.vacation === 'jour' 
+                              ? 'bg-yellow-100 text-yellow-800' 
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {cargaison.vacation}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-600">N/A</span>
+                        )}
                       </td>
                       <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
-                          {truncateText(getZoneName(cargaison.zone))}
-                        </div>
+                        {(() => {
+                          const zoneName = getZoneName(cargaison.zone);
+                          return zoneName !== "N/A" ? (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              getZoneColor(zoneName)
+                            }`}>
+                              {truncateText(zoneName)}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-gray-600">N/A</span>
+                          );
+                        })()} 
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm text-gray-600">

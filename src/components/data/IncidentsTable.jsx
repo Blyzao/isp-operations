@@ -41,6 +41,36 @@ function IncidentsTable() {
   const [userProfile, setUserProfile] = useState(null);
   const navigate = useNavigate();
 
+  const getCategorieColor = (categorie) => {
+    switch (categorie) {
+      case "Sécurité":
+        return "bg-red-100 text-red-800";
+      case "Sûreté":
+        return "bg-blue-100 text-blue-800";
+      case "Informations":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getZoneColor = (zoneName) => {
+    switch (zoneName) {
+      case "Zone 2":
+        return "bg-blue-100 text-blue-800";
+      case "Zone 3":
+        return "bg-green-100 text-green-800";
+      case "SOC":
+        return "bg-purple-100 text-purple-800";
+      case "Nautique":
+        return "bg-cyan-100 text-cyan-800";
+      case "IPC":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   const fetchUserProfile = async () => {
     if (user) {
       const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -383,6 +413,7 @@ function IncidentsTable() {
                 <option value="all">Toutes catégories</option>
                 <option value="Sécurité">Sécurité</option>
                 <option value="Sûreté">Sûreté</option>
+                <option value="Informations">Informations</option>
               </select>
               <select
                 value={filterNiveau}
@@ -480,9 +511,18 @@ function IncidentsTable() {
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
-                          {zones.find(z => z.id === incident.zone)?.nomZone || "N/A"}
-                        </div>
+                        {(() => {
+                          const zoneName = zones.find(z => z.id === incident.zone)?.nomZone;
+                          return zoneName ? (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              getZoneColor(zoneName)
+                            }`}>
+                              {zoneName}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-gray-600">N/A</span>
+                          );
+                        })()} 
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm text-gray-600">
@@ -490,9 +530,15 @@ function IncidentsTable() {
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
-                          {incident.categorie || "N/A"}
-                        </div>
+                        {incident.categorie ? (
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            getCategorieColor(incident.categorie)
+                          }`}>
+                            {incident.categorie}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-600">N/A</span>
+                        )}
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm text-gray-600">
