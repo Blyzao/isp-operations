@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../firebase";
-import { collection, getDocs, query, where, orderBy, doc, deleteDoc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, where, orderBy, doc, deleteDoc, getDoc, addDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../../firebase";
 import {
@@ -20,6 +20,7 @@ import {
   Hash,
   CheckCircle,
   XCircle,
+  Copy,
 } from "lucide-react";
 import CargaisonFormModal from "./CargaisonFormModal";
 import * as XLSX from 'xlsx';
@@ -119,6 +120,27 @@ function CargaisonTable() {
         await fetchAllData();
       } catch (error) {
         console.error("Erreur lors de la suppression:", error);
+      }
+    }
+  };
+
+  const handleDuplicate = async (cargaison) => {
+    if (window.confirm("Voulez-vous dupliquer cette cargaison ?")) {
+      try {
+        // Créer un nouvel objet sans l'ID et avec une nouvelle dateEnregistrement
+        const { id, dateEnregistrement, ...cargaisonData } = cargaison;
+        const newCargaison = {
+          ...cargaisonData,
+          dateEnregistrement: new Date().toISOString(),
+        };
+        
+        // Ajouter à la collection
+        await addDoc(collection(db, "saisieCargaison"), newCargaison);
+        await fetchAllData();
+        
+        console.log("Cargaison dupliquée avec succès");
+      } catch (error) {
+        console.error("Erreur lors de la duplication:", error);
       }
     }
   };
@@ -282,26 +304,43 @@ function CargaisonTable() {
       <div className="container mx-auto px-4">
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full">
-                <Package className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">Saisie Cargaison</h1>
-                <p className="text-gray-600 text-sm">Gestion des cargaisons saisies</p>
-              </div>
+            <div>
+              <h1 className="text-lg font-medium text-gray-600">Data/Cargaisons</h1>
+              <p className="text-gray-600 text-sm">Gestion des cargaisons saisies</p>
             </div>
             <div className="flex space-x-2">
               <button
                 onClick={exportToExcel}
-                className="flex items-center space-x-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm cursor-pointer"
+                className="flex items-center space-x-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-2 transition-all duration-200 text-sm cursor-pointer"
+                style={{borderRadius: '50px'}}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'transparent';
+                  e.target.style.border = '1px solid #16a34a';
+                  e.target.style.color = '#16a34a';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '';
+                  e.target.style.border = '';
+                  e.target.style.color = '';
+                }}
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 <span>Exporter Excel</span>
               </button>
               <button
                 onClick={handleNew}
-                className="flex items-center space-x-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm cursor-pointer"
+                className="flex items-center space-x-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 transition-all duration-200 text-sm cursor-pointer"
+                style={{borderRadius: '50px'}}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'transparent';
+                  e.target.style.border = '1px solid #2563eb';
+                  e.target.style.color = '#2563eb';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '';
+                  e.target.style.border = '';
+                  e.target.style.color = '';
+                }}
               >
                 <Plus className="w-4 h-4" />
                 <span>Nouvelle cargaison</span>
@@ -386,39 +425,39 @@ function CargaisonTable() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Date</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Heure</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Vacation</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Zone</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Lieu</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Type Cargaison</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Nombre</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Masse (kg)</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Entreprise</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Enregistré par</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Date enregistrement</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Date</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Heure</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Vacation</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Zone</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Lieu</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Type Cargaison</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Nombre</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Masse (kg)</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Entreprise</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Enregistré par</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Date enregistrement</th>
                     {(userProfile?.profil === "admin" || userProfile?.profil === "superviseur") && (
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Validé</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Validé</th>
                     )}
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Actions</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredCargaisons.map((cargaison) => (
                     <tr key={cargaison.id} className="hover:bg-gray-50 transition-colors duration-150">
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
+                      <td className="py-3 px-4 max-w-24">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={cargaison.date ? new Date(cargaison.date).toLocaleDateString("fr-FR", { day: '2-digit', month: '2-digit', year: 'numeric' }) : "N/A"}>
                           {cargaison.date ? new Date(cargaison.date).toLocaleDateString("fr-FR", { day: '2-digit', month: '2-digit', year: 'numeric' }) : "N/A"}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
+                      <td className="py-3 px-4 max-w-16">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={cargaison.heure || "N/A"}>
                           {cargaison.heure || "N/A"}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 max-w-20">
                         {cargaison.vacation ? (
-                          <span className={`px-2 py-1 rounded-full text-xs ${
+                          <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
                             cargaison.vacation === 'jour' 
                               ? 'bg-yellow-100 text-yellow-800' 
                               : 'bg-blue-100 text-blue-800'
@@ -426,55 +465,55 @@ function CargaisonTable() {
                             {cargaison.vacation}
                           </span>
                         ) : (
-                          <span className="text-sm text-gray-600">N/A</span>
+                          <span className="text-sm text-gray-600 whitespace-nowrap">N/A</span>
                         )}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 max-w-24">
                         {(() => {
                           const zoneName = getZoneName(cargaison.zone);
                           return zoneName !== "N/A" ? (
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                               getZoneColor(zoneName)
-                            }`}>
-                              {truncateText(zoneName)}
+                            }`} title={zoneName}>
+                              {zoneName}
                             </span>
                           ) : (
-                            <span className="text-sm text-gray-600">N/A</span>
+                            <span className="text-sm text-gray-600 whitespace-nowrap">N/A</span>
                           );
                         })()} 
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
-                          {truncateText(getLieuName(cargaison.lieu))}
+                      <td className="py-3 px-4 max-w-32">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={getLieuName(cargaison.lieu)}>
+                          {getLieuName(cargaison.lieu)}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
-                          {truncateText(getTypeCargaisonName(cargaison.typeCargaison))}
+                      <td className="py-3 px-4 max-w-40">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={getTypeCargaisonName(cargaison.typeCargaison)}>
+                          {getTypeCargaisonName(cargaison.typeCargaison)}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
+                      <td className="py-3 px-4 max-w-20">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={cargaison.nombreCargaison || "N/A"}>
                           {cargaison.nombreCargaison || "N/A"}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
+                      <td className="py-3 px-4 max-w-20">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={cargaison.masseCargaison || "N/A"}>
                           {cargaison.masseCargaison || "N/A"}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
-                          {truncateText(cargaison.entreprise || "N/A")}
+                      <td className="py-3 px-4 max-w-32">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={cargaison.entreprise || "N/A"}>
+                          {cargaison.entreprise || "N/A"}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
-                          {truncateText(getUserName(cargaison.enregistrePar))}
+                      <td className="py-3 px-4 max-w-32">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={getUserName(cargaison.enregistrePar)}>
+                          {getUserName(cargaison.enregistrePar)}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
+                      <td className="py-3 px-4 max-w-36">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={cargaison.dateEnregistrement ? new Date(cargaison.dateEnregistrement).toLocaleDateString("fr-FR") + " " + new Date(cargaison.dateEnregistrement).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' }) : "N/A"}>
                           {cargaison.dateEnregistrement ? new Date(cargaison.dateEnregistrement).toLocaleDateString("fr-FR") + " " + new Date(cargaison.dateEnregistrement).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' }) : "N/A"}
                         </div>
                       </td>
@@ -495,15 +534,55 @@ function CargaisonTable() {
                             <>
                               <button
                                 onClick={() => handleEdit(cargaison)}
-                                className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-full transition-all duration-200 cursor-pointer"
+                                className="p-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white transition-all duration-200 cursor-pointer"
+                                style={{borderRadius: '50px'}}
                                 title="Modifier"
+                                onMouseEnter={(e) => {
+                                  e.target.style.background = 'transparent';
+                                  e.target.style.border = '1px solid #2563eb';
+                                  e.target.style.color = '#2563eb';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.background = '';
+                                  e.target.style.border = '';
+                                  e.target.style.color = '';
+                                }}
                               >
                                 <Edit3 className="w-4 h-4" />
                               </button>
                               <button
+                                onClick={() => handleDuplicate(cargaison)}
+                                className="p-2 bg-gradient-to-r from-green-600 to-green-700 text-white transition-all duration-200 cursor-pointer"
+                                style={{borderRadius: '50px'}}
+                                title="Dupliquer"
+                                onMouseEnter={(e) => {
+                                  e.target.style.background = 'transparent';
+                                  e.target.style.border = '1px solid #16a34a';
+                                  e.target.style.color = '#16a34a';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.background = '';
+                                  e.target.style.border = '';
+                                  e.target.style.color = '';
+                                }}
+                              >
+                                <Copy className="w-4 h-4" />
+                              </button>
+                              <button
                                 onClick={() => handleDelete(cargaison.id)}
-                                className="p-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-full transition-all duration-200 cursor-pointer"
+                                className="p-2 bg-gradient-to-r from-red-600 to-red-700 text-white transition-all duration-200 cursor-pointer"
+                                style={{borderRadius: '50px'}}
                                 title="Supprimer"
+                                onMouseEnter={(e) => {
+                                  e.target.style.background = 'transparent';
+                                  e.target.style.border = '1px solid #dc2626';
+                                  e.target.style.color = '#dc2626';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.background = '';
+                                  e.target.style.border = '';
+                                  e.target.style.color = '';
+                                }}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>

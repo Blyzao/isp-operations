@@ -28,6 +28,9 @@ import IncidentsTable from "./components/data/IncidentsTable.jsx";
 import IncidentForm from "./components/data/IncidentForm.jsx";
 import DocumentsSaisisTable from "./components/data/DocumentsSaisisTable.jsx";
 import CargaisonTable from "./components/data/CargaisonTable.jsx";
+import IndividusInterpellesTable from "./components/data/IndividusInterpellesTable.jsx";
+import EffectifsTable from "./components/data/EffectifsTable.jsx";
+import MetroMenuPage from "./components/MetroMenuPage.jsx";
 
 const ProtectedRoute = ({ children, user, requiredRoles }) => {
   const navigate = useNavigate();
@@ -79,6 +82,11 @@ function App() {
           const isFirstConnect = userData.firstConnect === true;
           setIsFirstConnection(isFirstConnect);
           setShowFirstConnection(isFirstConnect);
+          
+          // Redirection vers menu/donnees après chargement du profil
+          if (!isFirstConnect && window.location.pathname === '/') {
+            navigate("/menu/donnees", { replace: true });
+          }
         }
       } catch (error) {
         console.error("Erreur lors de la vérification du profil:", error);
@@ -93,7 +101,7 @@ function App() {
   const handleFirstConnectionComplete = () => {
     setIsFirstConnection(false);
     setShowFirstConnection(false);
-    navigate("/");
+    navigate("/menu/donnees");
   };
 
   if (loadingProfile) {
@@ -131,15 +139,7 @@ function App() {
         element={
           <ProtectedRoute user={user}>
             <Layout>
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-800 mb-4">
-                  Bienvenue sur Nexion
-                </h1>
-                <p className="text-gray-600">
-                  Plateforme sécurisée de gestion des données des opérations de
-                  sûreté
-                </p>
-              </div>
+              <MetroMenuPage menuType="donnees" userRole={userProfile?.profil || "user"} />
             </Layout>
           </ProtectedRoute>
         }
@@ -398,6 +398,63 @@ function App() {
           >
             <Layout>
               <CargaisonTable />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/operations/individus-interpelles"
+        element={
+          <ProtectedRoute
+            user={user}
+            requiredRoles={["admin", "superviseur", "user"]}
+          >
+            <Layout>
+              <IndividusInterpellesTable />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/operations/effectifs"
+        element={
+          <ProtectedRoute
+            user={user}
+            requiredRoles={["admin", "superviseur", "user"]}
+          >
+            <Layout>
+              <EffectifsTable />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      {/* Menu routes */}
+      <Route
+        path="/menu/donnees"
+        element={
+          <ProtectedRoute user={user}>
+            <Layout>
+              <MetroMenuPage menuType="donnees" userRole={userProfile?.profil || "user"} />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/menu/statistiques"
+        element={
+          <ProtectedRoute user={user}>
+            <Layout>
+              <MetroMenuPage menuType="statistiques" userRole={userProfile?.profil || "user"} />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/menu/parametres"
+        element={
+          <ProtectedRoute user={user} requiredRoles="admin">
+            <Layout>
+              <MetroMenuPage menuType="parametres" userRole={userProfile?.profil || "user"} />
             </Layout>
           </ProtectedRoute>
         }

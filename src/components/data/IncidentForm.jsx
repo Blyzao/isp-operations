@@ -79,6 +79,7 @@ function IncidentForm() {
   const [filteredTypeIncidents, setFilteredTypeIncidents] = useState([]);
   const [personnels, setPersonnels] = useState([]);
   const [cameras, setCameras] = useState([]);
+  const [entreprises, setEntreprises] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
@@ -164,6 +165,14 @@ function IncidentForm() {
           idCamera: doc.data().idCamera,
         }));
         setCameras(camerasList);
+
+        // Fetch entreprises
+        const entreprisesSnapshot = await getDocs(collection(db, "entreprise"));
+        const entreprisesList = entreprisesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          nomEntreprise: doc.data().nomEntreprise,
+        }));
+        setEntreprises(entreprisesList.sort((a, b) => a.nomEntreprise.localeCompare(b.nomEntreprise)));
 
         // If edit mode or view mode, fetch incident data
         if (isEditMode || isViewMode) {
@@ -552,18 +561,13 @@ function IncidentForm() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg">
-                <AlertTriangle className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {isViewMode ? "Détails de l'incident" : isEditMode ? "Modifier l'incident" : "Nouvel incident"}
-                </h1>
-                <p className="text-gray-600 text-sm">
-                  {isViewMode ? "Consulter les informations de l'incident" : isEditMode ? "Mettre à jour les informations de l'incident" : "Créer un nouveau rapport d'incident"}
-                </p>
-              </div>
+            <div>
+              <h1 className="text-lg font-medium text-gray-600">
+                Data/{isViewMode ? "Détails de l'incident" : isEditMode ? "Modifier l'incident" : "Incidents"}
+              </h1>
+              <p className="text-gray-600 text-sm">
+                {isViewMode ? "Consulter les informations de l'incident" : isEditMode ? "Mettre à jour les informations de l'incident" : "Créer un nouveau rapport d'incident"}
+              </p>
             </div>
             <button
               onClick={() => navigate("/operations/incidents")}
@@ -579,22 +583,6 @@ function IncidentForm() {
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
           <div className="p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Référence */}
-              {formData.reference && (
-                <div className="bg-gray-50 border border-gray-200 rounded-full p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-gray-100 rounded-full">
-                      <Hash className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-sm">Référence de l'incident</h3>
-                      <p className="text-lg font-mono font-bold text-gray-600 mt-1">
-                        {formData.reference}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Date et Heure */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -797,17 +785,22 @@ function IncidentForm() {
                     </div>
                     <span>Primo intervenant</span>
                   </label>
-                  <select
+                  <input
+                    list="entreprises-list"
                     name="primo"
                     value={formData.primo}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 text-sm"
+                    placeholder="Saisir ou sélectionner une entreprise"
                     required
                     disabled={isViewMode}
-                  >
-                    <option value="ISP">ISP</option>
-                    <option value="Extérieur">Extérieur</option>
-                  </select>
+                  />
+                  <datalist id="entreprises-list">
+                    <option value="ISP" />
+                    {entreprises.map((entreprise) => (
+                      <option key={entreprise.id} value={entreprise.nomEntreprise} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
 

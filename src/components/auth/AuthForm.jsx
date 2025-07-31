@@ -68,7 +68,7 @@ function AuthForm({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer"
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -111,7 +111,7 @@ function AuthForm({
             className={`w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl ${
               isLoading
                 ? "bg-gradient-to-r from-blue-400 to-blue-500 cursor-not-allowed"
-                : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform hover:-translate-y-0.5"
+                : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform hover:-translate-y-0.5 cursor-pointer"
             } text-white`}
           >
             {isLoading ? (
@@ -132,7 +132,7 @@ function AuthForm({
             <button
               type="button"
               onClick={() => setShowForgotPassword(true)}
-              className="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium transition-colors duration-200 flex items-center justify-center space-x-1 w-full"
+              className="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium transition-colors duration-200 flex items-center justify-center space-x-1 w-full cursor-pointer"
               style={{color: '#2563eb !important'}}
               disabled={isLoading}
             >

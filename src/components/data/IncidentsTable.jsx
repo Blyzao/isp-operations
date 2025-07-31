@@ -348,26 +348,23 @@ function IncidentsTable() {
       <div className="container mx-auto px-4">
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-gradient-to-r from-red-600 to-red-700 rounded-full">
-                <AlertTriangle className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">Incidents</h1>
-                <p className="text-gray-600 text-sm">Gestion des incidents</p>
-              </div>
+            <div>
+              <h1 className="text-lg font-medium text-gray-600">Data/Incidents</h1>
+              <p className="text-gray-600 text-sm">Gestion des incidents</p>
             </div>
             <div className="flex space-x-2">
               <button
                 onClick={exportToExcel}
-                className="flex items-center space-x-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm"
+                className="flex items-center space-x-1 bg-green-600 hover:bg-transparent hover:border hover:border-green-600 hover:text-green-600 text-white px-4 py-2 transition-all duration-200 text-sm cursor-pointer"
+                style={{borderRadius: '50px'}}
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 <span>Exporter Excel</span>
               </button>
               <button
                 onClick={handleNew}
-                className="flex items-center space-x-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm"
+                className="flex items-center space-x-1 bg-red-600 hover:bg-transparent hover:border hover:border-red-600 hover:text-red-600 text-white px-4 py-2 transition-all duration-200 text-sm cursor-pointer"
+                style={{borderRadius: '50px'}}
               >
                 <Plus className="w-4 h-4" />
                 <span>Nouvel incident</span>
@@ -495,18 +492,18 @@ function IncidentsTable() {
                         incident.supprimer ? "opacity-50" : ""
                       }`}
                     >
-                      <td className="py-3 px-4">
-                        <div className="text-sm font-medium text-gray-900">
+                      <td className="py-3 px-4 max-w-32">
+                        <div className="text-sm font-medium text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis" title={incident.reference}>
                           {incident.reference}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
+                      <td className="py-3 px-4 max-w-24">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={incident.date ? new Date(incident.date).toLocaleDateString("fr-FR") : "N/A"}>
                           {incident.date ? new Date(incident.date).toLocaleDateString("fr-FR") : "N/A"}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
+                      <td className="py-3 px-4 max-w-16">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={incident.heure}>
                           {incident.heure}
                         </div>
                       </td>
@@ -524,8 +521,8 @@ function IncidentsTable() {
                           );
                         })()} 
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
+                      <td className="py-3 px-4 max-w-32">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={lieux.find(l => l.id === incident.lieu)?.nomLieu || "N/A"}>
                           {lieux.find(l => l.id === incident.lieu)?.nomLieu || "N/A"}
                         </div>
                       </td>
@@ -540,18 +537,18 @@ function IncidentsTable() {
                           <span className="text-sm text-gray-600">N/A</span>
                         )}
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
+                      <td className="py-3 px-4 max-w-40">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={typeIncidents.find(t => t.id === incident.typeIncident)?.nomIncident || "N/A"}>
                           {typeIncidents.find(t => t.id === incident.typeIncident)?.nomIncident || "N/A"}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
+                      <td className="py-3 px-4 max-w-32">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={users.find(u => u.id === incident.user)?.nom || "N/A"}>
                           {users.find(u => u.id === incident.user)?.nom || "N/A"}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">
+                      <td className="py-3 px-4 max-w-36">
+                        <div className="text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis" title={`${new Date(incident.dateEnreg).toLocaleDateString("fr-FR")} ${new Date(incident.dateEnreg).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}`}>
                           {new Date(incident.dateEnreg).toLocaleDateString("fr-FR")} {new Date(incident.dateEnreg).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </td>
@@ -559,11 +556,12 @@ function IncidentsTable() {
                         <td className="py-3 px-4">
                           <button
                             onClick={() => handleToggleSupprimer(incident.id, incident.supprimer)}
-                            className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs transition-all duration-200 ${
+                            className={`flex items-center space-x-1 px-2 py-1 text-xs transition-all duration-200 cursor-pointer ${
                               incident.supprimer
-                                ? "bg-red-50 text-red-700 hover:bg-red-100"
-                                : "bg-green-50 text-green-700 hover:bg-green-100"
+                                ? "bg-red-600 text-white hover:bg-transparent hover:border hover:border-red-600 hover:text-red-600"
+                                : "bg-green-600 text-white hover:bg-transparent hover:border hover:border-green-600 hover:text-green-600"
                             }`}
+                            style={{borderRadius: '50px'}}
                           >
                             {incident.supprimer ? (
                               <EyeOff className="w-3 h-3" />
@@ -578,14 +576,16 @@ function IncidentsTable() {
                         <div className="flex space-x-1">
                           <button
                             onClick={() => handleView(incident.id)}
-                            className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-full transition-all duration-200"
+                            className="p-2 bg-gray-600 text-white hover:bg-transparent hover:border hover:border-gray-600 hover:text-gray-600 transition-all duration-200 cursor-pointer"
+                            style={{borderRadius: '50px'}}
                             title="Afficher"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handlePrint(incident)}
-                            className="p-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-full transition-all duration-200"
+                            className="p-2 bg-green-600 text-white hover:bg-transparent hover:border hover:border-green-600 hover:text-green-600 transition-all duration-200 cursor-pointer"
+                            style={{borderRadius: '50px'}}
                             title="Imprimer"
                           >
                             <Printer className="w-4 h-4" />
@@ -593,7 +593,8 @@ function IncidentsTable() {
                           {userProfile?.profil !== "user" && (
                             <button
                               onClick={() => handleEdit(incident.id)}
-                              className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-full transition-all duration-200"
+                              className="p-2 bg-blue-600 text-white hover:!bg-transparent hover:border hover:border-blue-600 hover:text-blue-600 transition-all duration-200 cursor-pointer"
+                              style={{borderRadius: '50px'}}
                               title="Modifier"
                             >
                               <Edit3 className="w-4 h-4" />
@@ -602,7 +603,8 @@ function IncidentsTable() {
                           {userProfile?.profil === "admin" && (
                             <button
                               onClick={() => handleToggleSupprimer(incident.id, incident.supprimer)}
-                              className="p-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-full transition-all duration-200"
+                              className="p-2 bg-red-600 text-white hover:bg-transparent hover:border hover:border-red-600 hover:text-red-600 transition-all duration-200 cursor-pointer"
+                              style={{borderRadius: '50px'}}
                               title="Supprimer"
                             >
                               <Trash2 className="w-4 h-4" />

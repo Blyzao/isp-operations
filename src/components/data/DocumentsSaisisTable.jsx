@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../../firebase";
-import { collection, getDocs, query, where, orderBy, doc, setDoc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, where, orderBy, doc, setDoc, getDoc, addDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../../firebase";
 import {
@@ -21,6 +21,7 @@ import {
   Building,
   User,
   Shield,
+  Copy,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx';
@@ -293,6 +294,27 @@ function DocumentsSaisisTable() {
     }
   };
 
+  const handleDuplicate = async (document) => {
+    if (window.confirm("Voulez-vous dupliquer ce document saisi ?")) {
+      try {
+        // Créer un nouvel objet sans l'ID et avec une nouvelle dateEnregistrement
+        const { id, dateEnregistrement, ...documentData } = document;
+        const newDocument = {
+          ...documentData,
+          dateEnregistrement: new Date().toISOString(),
+        };
+        
+        // Ajouter à la collection
+        await addDoc(collection(db, "documentsSaisis"), newDocument);
+        fetchDocumentsSaisis();
+        
+        console.log("Document dupliqué avec succès");
+      } catch (error) {
+        console.error("Erreur lors de la duplication:", error);
+      }
+    }
+  };
+
   const canEdit = (document) => {
     if (!userProfile) return false;
     const isAdmin = userProfile.profil === "admin";
@@ -414,26 +436,43 @@ function DocumentsSaisisTable() {
       <div className="container mx-auto px-4">
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-gradient-to-r from-blue-900 to-blue-700 rounded-full">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">Documents Saisis</h1>
-                <p className="text-gray-600 text-sm">Gestion des titres d'accès saisis</p>
-              </div>
+            <div>
+              <h1 className="text-lg font-medium text-gray-600">Data/Documents</h1>
+              <p className="text-gray-600 text-sm">Gestion des titres d'accès saisis</p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={handleNewDocument}
-                className="flex items-center space-x-1 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm cursor-pointer"
+                className="flex items-center space-x-1 bg-gradient-to-r from-blue-900 to-blue-700 text-white px-4 py-2 transition-all duration-200 text-sm cursor-pointer"
+                style={{borderRadius: '50px'}}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'transparent';
+                  e.target.style.border = '1px solid #1e40af';
+                  e.target.style.color = '#1e40af';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '';
+                  e.target.style.border = '';
+                  e.target.style.color = '';
+                }}
               >
                 <Plus className="w-4 h-4" />
                 <span>Nouveau document</span>
               </button>
               <button
                 onClick={exportToExcel}
-                className="flex items-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm cursor-pointer"
+                className="flex items-center space-x-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-2 transition-all duration-200 text-sm cursor-pointer"
+                style={{borderRadius: '50px'}}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'transparent';
+                  e.target.style.border = '1px solid #16a34a';
+                  e.target.style.color = '#16a34a';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '';
+                  e.target.style.border = '';
+                  e.target.style.color = '';
+                }}
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 <span>Export Excel</span>
@@ -607,13 +646,53 @@ function DocumentsSaisisTable() {
                             <>
                               <button
                                 onClick={() => handleEdit(document.id)}
-                                className="p-1 hover:bg-blue-100 text-blue-600 rounded cursor-pointer"
+                                className="p-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white transition-all duration-200 cursor-pointer"
+                                style={{borderRadius: '50px'}}
+                                onMouseEnter={(e) => {
+                                  e.target.style.background = 'transparent';
+                                  e.target.style.border = '1px solid #2563eb';
+                                  e.target.style.color = '#2563eb';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.background = '';
+                                  e.target.style.border = '';
+                                  e.target.style.color = '';
+                                }}
                               >
                                 <Edit3 className="w-4 h-4" />
                               </button>
                               <button
+                                onClick={() => handleDuplicate(document)}
+                                className="p-1 bg-gradient-to-r from-green-600 to-green-700 text-white transition-all duration-200 cursor-pointer"
+                                style={{borderRadius: '50px'}}
+                                title="Dupliquer"
+                                onMouseEnter={(e) => {
+                                  e.target.style.background = 'transparent';
+                                  e.target.style.border = '1px solid #16a34a';
+                                  e.target.style.color = '#16a34a';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.background = '';
+                                  e.target.style.border = '';
+                                  e.target.style.color = '';
+                                }}
+                              >
+                                <Copy className="w-4 h-4" />
+                              </button>
+                              <button
                                 onClick={() => handleDelete(document.id)}
-                                className="p-1 hover:bg-red-100 text-red-600 rounded cursor-pointer"
+                                className="p-1 bg-gradient-to-r from-red-600 to-red-700 text-white transition-all duration-200 cursor-pointer"
+                                style={{borderRadius: '50px'}}
+                                onMouseEnter={(e) => {
+                                  e.target.style.background = 'transparent';
+                                  e.target.style.border = '1px solid #dc2626';
+                                  e.target.style.color = '#dc2626';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.background = '';
+                                  e.target.style.border = '';
+                                  e.target.style.color = '';
+                                }}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>

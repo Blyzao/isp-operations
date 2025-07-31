@@ -138,7 +138,7 @@ function Auth() {
       }
 
       console.log("Connexion réussie");
-      navigate("/");
+      navigate("/menu/donnees");
     } catch (err) {
       console.error("Erreur de connexion:", err.message);
       let errorMessage = "Une erreur est survenue lors de la connexion.";
@@ -256,13 +256,13 @@ function Auth() {
   };
 
   return (
-    <div className="auth-form min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
+    <div className="auth-form min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4" style={{fontFamily: 'Poppins, sans-serif'}}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-md mx-auto">
 
         <ErrorMessage error={error} onDismiss={dismissError} />
 

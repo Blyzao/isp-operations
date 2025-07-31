@@ -667,7 +667,18 @@ function DocumentsSaisisFormModal({ isOpen, onClose, documentId, isEditMode }) {
                 <button
                   type="button"
                   onClick={handleAddIntervenant}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 text-sm flex items-center space-x-1 cursor-pointer"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 transition-all duration-200 text-sm flex items-center space-x-1 cursor-pointer"
+                  style={{borderRadius: '50px', color: 'white'}}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'transparent';
+                    e.target.style.border = '1px solid #2563eb';
+                    e.target.style.color = '#2563eb';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '';
+                    e.target.style.border = '';
+                    e.target.style.color = 'white';
+                  }}
                 >
                   <Plus className="w-4 h-4" />
                   <span>Ajouter</span>
@@ -710,14 +721,40 @@ function DocumentsSaisisFormModal({ isOpen, onClose, documentId, isEditMode }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 text-sm cursor-pointer"
+                className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white transition-all duration-200 text-sm cursor-pointer"
+                style={{borderRadius: '50px'}}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'transparent';
+                  e.target.style.border = '1px solid #6b7280';
+                  e.target.style.color = '#6b7280';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '';
+                  e.target.style.border = '';
+                  e.target.style.color = '';
+                }}
               >
                 Annuler
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white rounded-lg disabled:from-blue-500 disabled:to-blue-400 transition-all duration-200 text-sm cursor-pointer"
+                className="flex items-center space-x-1 px-4 py-2 bg-gradient-to-r from-blue-900 to-blue-700 disabled:from-blue-500 disabled:to-blue-400 transition-all duration-200 text-sm cursor-pointer"
+                style={{borderRadius: '50px', color: 'white'}}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.target.style.background = 'transparent';
+                    e.target.style.border = '1px solid #1e40af';
+                    e.target.style.color = '#1e40af';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading) {
+                    e.target.style.background = '';
+                    e.target.style.border = '';
+                    e.target.style.color = 'white';
+                  }
+                }}
               >
                 {loading ? (
                   <>

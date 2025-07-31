@@ -101,20 +101,31 @@ function UsersTable() {
       <div className="container mx-auto px-4">
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-gradient-to-r from-blue-900 to-blue-700 rounded-full">
-                <Users className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  Utilisateurs
-                </h1>
-                <p className="text-gray-600 text-sm">Gestion des comptes</p>
-              </div>
+            <div>
+              <h1 className="text-lg font-medium text-gray-600">Admin/Utilisateurs</h1>
+              <p className="text-gray-600 text-sm">Gestion des comptes</p>
             </div>
             <button
               onClick={handleNewUser}
-              className="flex items-center space-x-1 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-800 hover:to-blue-600 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm"
+              className="flex items-center space-x-1 bg-gradient-to-r from-blue-900 to-blue-700 text-white px-4 py-2 transition-all duration-200 text-sm cursor-pointer"
+              style={{
+                borderRadius: '50px',
+                '&:hover': {
+                  background: 'transparent !important',
+                  border: '1px solid #1d4ed8',
+                  color: '#1d4ed8'
+                }
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.border = '1px solid #1d4ed8';
+                e.target.style.color = '#1d4ed8';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '';
+                e.target.style.border = '';
+                e.target.style.color = '';
+              }}
             >
               <UserPlus className="w-4 h-4" />
               <span>Nouvel utilisateur</span>

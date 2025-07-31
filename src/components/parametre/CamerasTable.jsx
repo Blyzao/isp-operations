@@ -160,14 +160,9 @@ function CamerasTable() {
       <div className="container mx-auto px-4">
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-gradient-to-r from-blue-900 to-blue-700 rounded-full">
-                <Camera className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">Caméras</h1>
-                <p className="text-gray-600 text-sm">Gestion des caméras</p>
-              </div>
+            <div>
+              <h1 className="text-lg font-medium text-gray-600">Paramètres/Caméras</h1>
+              <p className="text-gray-600 text-sm">Gestion des caméras</p>
             </div>
             <div className="flex gap-2">
               <button

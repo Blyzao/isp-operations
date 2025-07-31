@@ -95,7 +95,7 @@ function EntrepriseTable() {
                 <Building2 className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">Entreprises</h1>
+                <h1 className="text-lg font-medium text-gray-600">Paramètres/Entreprises</h1>
                 <p className="text-gray-600 text-sm">Gestion des entreprises</p>
               </div>
             </div>

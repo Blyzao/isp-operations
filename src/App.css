@@ -1,11 +1,25 @@
-/* Styles CSS pour corriger les problèmes de couleurs transparentes dans l'authentification */
+/* Styles CSS pour corriger les problï¿½mes de couleurs transparentes dans l'authentification */
+
+/* Application de la typographie Poppins aux composants d'authentification */
+.auth-form, .auth-form * {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif !important;
+}
+
+/* Style cursor pointer pour les boutons selon les instructions du projet */
+.auth-form button {
+  cursor: pointer !important;
+}
+
+.auth-form button:disabled {
+  cursor: not-allowed !important;
+}
 
 /* Force les couleurs de texte dans les composants auth */
 .auth-form * {
   color: inherit !important;
 }
 
-/* Labels spécifiques */
+/* Labels spï¿½cifiques */
 .auth-form label {
   color: #374151 !important;
 }
@@ -29,7 +43,7 @@
   color: #2563eb !important;
 }
 
-/* Inputs pour éviter la transparence */
+/* Inputs pour ï¿½viter la transparence */
 .auth-form input {
   color: #1f2937 !important;
 }
@@ -38,7 +52,7 @@
   color: #9ca3af !important;
 }
 
-/* Boutons pour garantir la visibilité du texte */
+/* Boutons pour garantir la visibilitï¿½ du texte */
 .auth-form button {
   color: inherit !important;
 }
@@ -47,7 +61,7 @@
   color: #ffffff !important;
 }
 
-/* Corrections spécifiques pour certains navigateurs */
+/* Corrections spï¿½cifiques pour certains navigateurs */
 @supports (-webkit-appearance: none) {
   .auth-form * {
     -webkit-text-fill-color: inherit !important;
@@ -55,7 +69,7 @@
   }
 }
 
-/* Force l'affichage des icônes */
+/* Force l'affichage des icï¿½nes */
 .auth-form svg {
   opacity: 1 !important;
   fill: currentColor !important;
